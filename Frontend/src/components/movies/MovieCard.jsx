@@ -1,8 +1,8 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Ticket, Play } from 'lucide-react';
-import RatingBadge from '../common/RatingBadge';
+import React from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { Ticket, Play } from "lucide-react";
+import RatingBadge from "../common/RatingBadge";
 
 const MovieCard = ({ movie }) => {
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ const MovieCard = ({ movie }) => {
   return (
     <motion.div
       whileHover={{ y: -6, scale: 1.02 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
       className="group relative bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-soft hover:shadow-soft-lg transition-all flex flex-col h-full cursor-pointer"
       onClick={() => navigate(`/movies/${movie.id}`)}
     >
@@ -50,7 +50,7 @@ const MovieCard = ({ movie }) => {
             <Ticket className="w-4 h-4" />
             <span>Book Tickets</span>
           </button>
-          
+
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -71,17 +71,19 @@ const MovieCard = ({ movie }) => {
             {movie.title}
           </h3>
           <p className="text-xs text-slate-500 mt-1 line-clamp-1 font-medium">
-            {movie.genre?.join(', ')}
+            {Array.isArray(movie.genre)
+              ? movie.genre.join(", ")
+              : typeof movie.genre === "string"
+                ? movie.genre
+                : "Genre unavailable"}
           </p>
         </div>
 
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 text-xs font-semibold text-slate-600">
           <span className="bg-slate-100 px-2 py-0.5 rounded-md text-slate-700">
-            {movie.languages?.[0] || 'Hindi'}
+            {movie.languages?.[0] || "Hindi"}
           </span>
-          <span className="text-slate-400">
-            {movie.duration}
-          </span>
+          <span className="text-slate-400">{movie.duration}</span>
         </div>
       </div>
     </motion.div>
