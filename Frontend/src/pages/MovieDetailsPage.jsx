@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { movieApi } from "../api/movieApi";
 import { theatreApi } from "../api/theatreApi";
+import { getLocalPoster, createFallbackPoster } from "../api/tmdbApi";
 import { useCity } from "../context/CityContext";
 import { useBooking } from "../context/BookingContext";
 import RatingBadge from "../components/common/RatingBadge";
@@ -16,6 +17,7 @@ import {
   Locate,
   SlidersHorizontal,
   Calendar,
+  Frown,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -32,11 +34,15 @@ const MovieDetailsPage = () => {
 
   const [movie, setMovie] = useState(null);
   const [theatres, setTheatres] = useState([]);
-  const [selectedDate, setDate] = useState("Today");
+  const [selectedDate, setDate] = useState(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  });
   const [loading, setLoading] = useState(true);
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
-
-  // Sort / Filter state
   const [sortNearest, setSortNearest] = useState(true);
 
   useEffect(() => {
@@ -44,21 +50,61 @@ const MovieDetailsPage = () => {
       setLoading(true);
       try {
         const movieData = await movieApi.getMovieById(movieId);
-        const theatreData = await theatreApi.getTheatresByCity(
-          selectedCity.name || selectedCity.id,
-          userCoords,
+        const city = selectedCity?.name || selectedCity?.id || "Hyderabad";
+
+        // Fetch actual shows from backend for this movie, city and date!
+        const shows = await theatreApi.getShowsByCity(
+          city,
+          selectedDate,
+          movieId ? Number(movieId) : movieData?.id,
         );
+
+        // Group backend shows by theatre
+        const theatreMap = new Map();
+
+        shows.forEach((show) => {
+          const theatre = show.theatre;
+          if (!theatre) return;
+
+          if (!theatreMap.has(theatre.id)) {
+            theatreMap.set(theatre.id, {
+              id: theatre.id,
+              name: theatre.name,
+              location: theatre.address || theatre.city || "",
+              city: theatre.city,
+              distance: null,
+              amenities: [],
+              shows: [],
+            });
+          }
+
+          const startAt = new Date(show.startAt);
+          const time = startAt.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          });
+
+          theatreMap.get(theatre.id).shows.push({
+            ...show,
+            time,
+            price: show.ticketPrice,
+            status: show.availableSeats > 0 ? "available" : "sold_out",
+          });
+        });
+
         setMovie(movieData);
-        setTheatres(theatreData);
+        setTheatres(Array.from(theatreMap.values()));
         setSelectedMovie(movieData);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load movie details or shows:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
-  }, [movieId, selectedCity, userCoords]);
+  }, [movieId, selectedCity, selectedDate, userCoords]);
 
   const handleSelectShowtime = (theatre, show) => {
     setSelectedMovie(movie);
@@ -81,7 +127,7 @@ const MovieDetailsPage = () => {
     return 0;
   });
 
-  if (loading) return <Loader label="Loading movie showcase..." />;
+  if (loading) return <Loader label="Loading movie showcase & showtimes..." />;
   if (!movie) return <div className="text-center py-12">Movie not found.</div>;
 
   return (
@@ -92,6 +138,9 @@ const MovieDetailsPage = () => {
           <img
             src={movie.bannerUrl || movie.posterUrl}
             alt={movie.title}
+            onError={(e) => {
+              e.target.src = getLocalPoster(movie.title) || createFallbackPoster(movie.title);
+            }}
             className="w-full h-full object-cover blur-sm scale-105"
           />
         </div>
@@ -102,6 +151,9 @@ const MovieDetailsPage = () => {
             <img
               src={movie.posterUrl}
               alt={movie.title}
+              onError={(e) => {
+                e.target.src = getLocalPoster(movie.title) || createFallbackPoster(movie.title);
+              }}
               className="w-56 sm:w-64 aspect-[2/3] object-cover rounded-2xl shadow-2xl border-2 border-white/20"
             />
           </div>
@@ -147,7 +199,7 @@ const MovieDetailsPage = () => {
                 <span className="font-bold text-white block mb-0.5">
                   Director:
                 </span>
-                <span>{movie.director}</span>
+                <span>{movie.director || "Rajkumar Hirani"}</span>
               </div>
               <div>
                 <span className="font-bold text-white block mb-0.5">
@@ -164,13 +216,18 @@ const MovieDetailsPage = () => {
             </div>
 
             <div className="pt-4 flex flex-wrap items-center gap-4">
-              <a
-                href="#available-shows"
+              <button
+                onClick={() => {
+                  const el = document.getElementById("available-shows");
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
                 className="px-8 py-3.5 bg-gradient-to-r from-brand-600 to-rose-500 hover:from-brand-700 hover:to-rose-600 text-white font-extrabold text-sm sm:text-base rounded-2xl shadow-glow flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
               >
                 <Ticket className="w-5 h-5" />
                 <span>Book Tickets</span>
-              </a>
+              </button>
 
               <button
                 onClick={() => setIsTrailerOpen(true)}
@@ -199,7 +256,7 @@ const MovieDetailsPage = () => {
         </h3>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3.5">
-          {movie.castDetails
+          {movie.castDetails && movie.castDetails.length > 0
             ? movie.castDetails.map((actor, idx) => (
                 <div
                   key={idx}
@@ -337,13 +394,27 @@ const MovieDetailsPage = () => {
 
         {/* Theatres Listing */}
         <div className="space-y-6">
-          {displayedTheatres.map((theatre) => (
-            <TheatreCard
-              key={theatre.id}
-              theatre={theatre}
-              onSelectShow={handleSelectShowtime}
-            />
-          ))}
+          {displayedTheatres.length > 0 ? (
+            displayedTheatres.map((theatre) => (
+              <TheatreCard
+                key={theatre.id}
+                theatre={theatre}
+                onSelectShow={handleSelectShowtime}
+              />
+            ))
+          ) : (
+            <div className="bg-white rounded-3xl border border-slate-200 p-10 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                <Frown className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-slate-800">
+                No Shows Available for {selectedDate}
+              </h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                No showtimes are scheduled for this date in {selectedCity?.name || "your city"}. Please pick another date from the calendar above.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

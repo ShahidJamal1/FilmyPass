@@ -3,9 +3,18 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Ticket, Play } from "lucide-react";
 import RatingBadge from "../common/RatingBadge";
+import { getLocalPoster, createFallbackPoster } from "../../api/tmdbApi";
 
 const MovieCard = ({ movie }) => {
   const navigate = useNavigate();
+
+  const posterSrc =
+    getLocalPoster(movie.title) ||
+    (movie.posterUrl && !movie.posterUrl.includes("image.tmdb.org")
+      ? movie.posterUrl
+      : null) ||
+    getLocalPoster(movie.title) ||
+    movie.posterUrl;
 
   return (
     <motion.div
@@ -17,8 +26,16 @@ const MovieCard = ({ movie }) => {
       {/* Poster Image Container */}
       <div className="relative aspect-[2/3] overflow-hidden bg-slate-900">
         <img
-          src={movie.posterUrl}
+          src={posterSrc}
           alt={movie.title}
+          onError={(e) => {
+            const local = getLocalPoster(movie.title);
+            if (local && !e.target.src.includes(local)) {
+              e.target.src = local;
+            } else {
+              e.target.src = createFallbackPoster(movie.title);
+            }
+          }}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
         />
@@ -81,7 +98,11 @@ const MovieCard = ({ movie }) => {
 
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 text-xs font-semibold text-slate-600">
           <span className="bg-slate-100 px-2 py-0.5 rounded-md text-slate-700">
-            {movie.languages?.[0] || "Hindi"}
+            {Array.isArray(movie.languages)
+              ? movie.languages[0]
+              : typeof movie.languages === "string"
+                ? movie.languages.split("/")[0]?.trim()
+                : "Hindi"}
           </span>
           <span className="text-slate-400">{movie.duration}</span>
         </div>
