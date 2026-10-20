@@ -1,26 +1,38 @@
 import React, { useState } from "react";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
 
+// Format a Date object to YYYY-MM-DD using local time (prevents UTC timezone shift bug)
+const formatLocalDate = (d) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const DateSelector = ({ selectedDate, onSelectDate }) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [currentMonthDate, setCurrentMonthDate] = useState(new Date());
 
-  // Generate next 7 days dynamically starting today
+  // Generate the 4 bookable days dynamically starting today (matches 4-day window in backend)
   const generateUpcomingDays = () => {
     const daysList = [];
     const today = new Date();
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 4; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
 
       const dayName =
-        i === 0 ? "Today" : d.toLocaleDateString("en-US", { weekday: "short" });
+        i === 0
+          ? "Today"
+          : i === 1
+            ? "Tomorrow"
+            : d.toLocaleDateString("en-US", { weekday: "short" });
       const dayNum = d.getDate().toString().padStart(2, "0");
       const monthName = d.toLocaleDateString("en-US", { month: "short" });
 
       const formattedLabel = `${dayName} ${dayNum} ${monthName}`;
-      const isoString = d.toISOString().split("T")[0];
+      const isoString = formatLocalDate(d);
 
       daysList.push({
         label: formattedLabel,
@@ -36,23 +48,19 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
 
   const quickDays = generateUpcomingDays();
 
-  // If selectedDate is a custom date outside the 7-day strip, add it dynamically
+  // If selectedDate is a custom date outside the 4-day strip, add it dynamically
   const isSelectedInQuick = quickDays.some(
     (item) => selectedDate === item.isoString,
   );
 
   let displayedDays = [...quickDays];
   if (!isSelectedInQuick && selectedDate && selectedDate !== "Today") {
-    const parts = selectedDate.split(" ");
-    const dayName = parts[0] || "Selected";
-    const dateNum = parts[1] || "";
-    const monthName = parts[2] || "";
-
-    displayedDays.unshift({
+    displayedDays.push({
       label: selectedDate,
-      dayName: dayName,
-      dateNum: dateNum,
-      monthName: monthName,
+      dayName: "Selected",
+      dateNum: selectedDate.slice(-2),
+      monthName: "",
+      isoString: selectedDate,
       isCustom: true,
     });
   }
@@ -80,17 +88,7 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
 
   const handlePickCalendarDate = (dateObj) => {
     if (!dateObj || dateObj < today) return;
-
-    const dayName = dateObj.toLocaleDateString("en-US", { weekday: "short" });
-    const dayNum = dateObj.getDate().toString().padStart(2, "0");
-    const monthName = dateObj.toLocaleDateString("en-US", { month: "short" });
-
-    const formatted = `${dayName} ${dayNum} ${monthName}`;
-    const year = dateObj.getFullYear();
-    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-    const day = String(dateObj.getDate()).padStart(2, "0");
-
-    onSelectDate(`${year}-${month}-${day}`);
+    onSelectDate(formatLocalDate(dateObj));
     setIsCalendarOpen(false);
   };
 
@@ -132,7 +130,7 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
 
           return (
             <button
-              key={item.label}
+              key={item.isoString}
               onClick={() => onSelectDate(item.isoString)}
               className={`px-3.5 py-2 rounded-2xl flex flex-col items-center justify-center shrink-0 border transition-all ${
                 isSelected
@@ -204,8 +202,8 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
               if (!dateObj) return <div key={idx} />;
 
               const isPast = dateObj < today;
-              const formattedDateStr = `${dateObj.toLocaleDateString("en-US", { weekday: "short" })} ${dateObj.getDate().toString().padStart(2, "0")} ${dateObj.toLocaleDateString("en-US", { month: "short" })}`;
-              const isSelected = selectedDate === formattedDateStr;
+              const iso = formatLocalDate(dateObj);
+              const isSelected = selectedDate === iso;
 
               return (
                 <button
@@ -235,11 +233,7 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
             </span>
             <button
               onClick={() => {
-                const year = today.getFullYear();
-                const month = String(today.getMonth() + 1).padStart(2, "0");
-                const day = String(today.getDate()).padStart(2, "0");
-
-                onSelectDate(`${year}-${month}-${day}`);
+                onSelectDate(formatLocalDate(today));
                 setIsCalendarOpen(false);
               }}
               className="text-brand-600 font-extrabold hover:underline"

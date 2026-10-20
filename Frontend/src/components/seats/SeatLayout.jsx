@@ -1,12 +1,14 @@
 import React from 'react';
 import Seat from './Seat';
 
-const SeatLayout = ({ selectedSeats, onToggleSeat }) => {
+const SeatLayout = ({ selectedSeats, onToggleSeat, reservedSeats = [], basePrice = 250 }) => {
+  const numericBasePrice = Number(basePrice) > 0 ? Number(basePrice) : 250;
+
   // Define row configurations with pricing & categories
   const categories = [
     {
       name: 'Royal Recliner',
-      price: 450,
+      price: Math.round((numericBasePrice * 1.4) / 10) * 10,
       rows: [
         { letter: 'A', seats: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
         { letter: 'B', seats: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
@@ -14,7 +16,7 @@ const SeatLayout = ({ selectedSeats, onToggleSeat }) => {
     },
     {
       name: 'Executive Prime',
-      price: 320,
+      price: Math.round((numericBasePrice * 1.15) / 10) * 10,
       rows: [
         { letter: 'C', seats: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
         { letter: 'D', seats: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
@@ -23,7 +25,7 @@ const SeatLayout = ({ selectedSeats, onToggleSeat }) => {
     },
     {
       name: 'Club Classic',
-      price: 220,
+      price: numericBasePrice,
       rows: [
         { letter: 'F', seats: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
         { letter: 'G', seats: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
@@ -32,11 +34,12 @@ const SeatLayout = ({ selectedSeats, onToggleSeat }) => {
     }
   ];
 
-  // Booked seats mock map
-  const bookedSeatsList = ['A3', 'A4', 'C6', 'C7', 'D1', 'D2', 'F9', 'F10', 'H5'];
+  const reservedSet = new Set((reservedSeats || []).map(s => String(s).toUpperCase()));
 
   const getSeatStatus = (code) => {
-    if (bookedSeatsList.includes(code)) return 'Booked';
+    if (reservedSet.has(code.toUpperCase())) {
+      return 'Booked';
+    }
     return 'Available';
   };
 

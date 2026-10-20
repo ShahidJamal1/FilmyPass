@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import toast from 'react-hot-toast';
 
 const BookingContext = createContext();
 
@@ -16,8 +17,9 @@ export const BookingProvider = ({ children }) => {
       if (exists) {
         return prevSeats.filter(s => s.code !== seatCode);
       }
-      if (prevSeats.length >= 10) {
-        return prevSeats; // Max 10 seats per transaction
+      if (prevSeats.length >= 8) {
+        toast.error('Maximum 8 tickets allowed per booking');
+        return prevSeats; // Max 8 seats allowed by backend constraint
       }
       return [...prevSeats, { code: seatCode, price: seatPrice }];
     });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Film, MapPin, Calendar, Clock, QrCode, Download, Printer, CheckCircle, Ticket } from 'lucide-react';
+import { Film, MapPin, Calendar, Clock, QrCode, Download, Printer, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const TicketCard = ({ booking, showActions = true }) => {
@@ -13,6 +13,19 @@ const TicketCard = ({ booking, showActions = true }) => {
     window.print();
   };
 
+  const movieTitle = booking.movieTitle || 'Movie Ticket';
+  const theatreName = booking.theatreName || 'Cinema Multiplex';
+  const location = booking.location || booking.theatreAddress || 'Cinema Hall';
+  
+  const startsAt = booking.showStartsAt ? new Date(booking.showStartsAt) : null;
+  const showDate = booking.showDate || (startsAt ? startsAt.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' }) : 'Today');
+  const showTime = booking.showTime || (startsAt ? startsAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '01:45 PM');
+
+  const seats = booking.seats || booking.seatLabels || [];
+  const ticketCount = booking.ticketCount || (Array.isArray(seats) ? seats.length : 1);
+  const totalPrice = booking.totalPrice ?? booking.totalAmount ?? 0;
+  const status = booking.status === 'CONFIRMED' || booking.status === 'Upcoming' ? 'Confirmed' : (booking.status || 'Confirmed');
+
   return (
     <div className="w-full max-w-2xl mx-auto bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-soft-lg transition-all">
       
@@ -24,9 +37,13 @@ const TicketCard = ({ booking, showActions = true }) => {
           </div>
           <span className="font-extrabold text-base tracking-tight">FilmyPass <span className="text-rose-400 font-normal">M-Ticket</span></span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs font-bold bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/30">
+        <div className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border ${
+          status === 'Cancelled'
+            ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+            : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+        }`}>
           <CheckCircle className="w-3.5 h-3.5" />
-          <span>{booking.status || 'Confirmed'}</span>
+          <span>{status}</span>
         </div>
       </div>
 
@@ -37,30 +54,30 @@ const TicketCard = ({ booking, showActions = true }) => {
         <div className="md:col-span-8 flex items-start gap-4">
           <img
             src={booking.moviePoster || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=400&auto=format&fit=crop'}
-            alt={booking.movieTitle}
+            alt={movieTitle}
             className="w-24 h-36 object-cover rounded-xl shadow-md shrink-0"
           />
           
           <div className="space-y-2">
             <h3 className="text-xl font-extrabold text-slate-900 leading-tight">
-              {booking.movieTitle}
+              {movieTitle}
             </h3>
 
             <div className="space-y-1 text-xs font-semibold text-slate-600">
               <div className="flex items-center gap-1.5 text-slate-700 font-bold">
-                <MapPin className="w-3.5 h-3.5 text-brand-600" />
-                <span>{booking.theatreName}</span>
+                <MapPin className="w-3.5 h-3.5 text-brand-600 shrink-0" />
+                <span>{theatreName}</span>
               </div>
-              <div className="text-slate-400 text-[11px] pl-5">{booking.location}</div>
+              <div className="text-slate-400 text-[11px] pl-5">{location}</div>
 
               <div className="flex items-center gap-4 pt-1 text-slate-800">
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{booking.showDate}</span>
+                  <span>{showDate}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{booking.showTime}</span>
+                  <span>{showTime}</span>
                 </div>
               </div>
             </div>
@@ -68,7 +85,7 @@ const TicketCard = ({ booking, showActions = true }) => {
             <div className="pt-2 flex items-center gap-2">
               <span className="text-xs font-semibold text-slate-500">Seats:</span>
               <span className="px-2.5 py-0.5 bg-rose-50 text-brand-700 font-black text-sm rounded-lg border border-rose-200">
-                {Array.isArray(booking.seats) ? booking.seats.join(', ') : booking.seats}
+                {Array.isArray(seats) ? seats.join(', ') : seats}
               </span>
             </div>
           </div>
@@ -98,8 +115,8 @@ const TicketCard = ({ booking, showActions = true }) => {
       <div className="px-6 py-4 bg-slate-50/70 flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-slate-600">
         <div>
           <span>Total Paid: </span>
-          <span className="font-extrabold text-slate-900 text-sm">₹{booking.totalPrice}</span>
-          <span className="text-slate-400 ml-2">({booking.ticketCount} {booking.ticketCount === 1 ? 'ticket' : 'tickets'})</span>
+          <span className="font-extrabold text-slate-900 text-sm">₹{totalPrice}</span>
+          <span className="text-slate-400 ml-2">({ticketCount} {ticketCount === 1 ? 'ticket' : 'tickets'})</span>
         </div>
 
         {showActions && (

@@ -5,12 +5,26 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('filmypass_user');
-    return saved ? JSON.parse(saved) : {
-      id: 'prof_demo123',
+    try {
+      const saved = localStorage.getItem('filmypass_user');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed) {
+          // Ensure id is a valid positive number
+          if (!parsed.id || isNaN(Number(parsed.id))) {
+            parsed.id = 1;
+          } else {
+            parsed.id = Number(parsed.id);
+          }
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return {
+      id: 1,
       name: 'Aryan Sharma',
       email: 'aryan@filmypass.com',
-      phone: '+91 98765 43210',
+      phone: '9876543210',
       avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop'
     };
   });
@@ -33,7 +47,7 @@ export const AuthProvider = ({ children }) => {
       setUser(profileData);
       return { success: true, user: profileData };
     } catch (err) {
-      return { success: false, message: 'Invalid credentials. Please try again.' };
+      return { success: false, message: err.message || 'Invalid credentials. Please try again.' };
     }
   };
 
@@ -43,7 +57,7 @@ export const AuthProvider = ({ children }) => {
       setUser(profileData);
       return { success: true, user: profileData };
     } catch (err) {
-      return { success: false, message: 'Registration failed.' };
+      return { success: false, message: err.message || 'Registration failed.' };
     }
   };
 

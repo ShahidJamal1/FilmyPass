@@ -17,6 +17,18 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
+    public record DirectBookingRequest(Long showId, Long profileId, java.util.List<String> seatLabels) {}
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public BookingResponse bookDirect(@RequestBody DirectBookingRequest request) {
+        Long showId = request.showId();
+        if (showId == null) {
+            throw new IllegalArgumentException("showId is required");
+        }
+        return bookingService.book(showId, new CreateBookingRequest(request.profileId(), request.seatLabels()));
+    }
+
     @PostMapping("/shows/{showId}")
     @ResponseStatus(HttpStatus.CREATED)
     public BookingResponse book(@PathVariable Long showId, @RequestBody CreateBookingRequest request)

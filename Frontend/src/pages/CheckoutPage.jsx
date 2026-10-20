@@ -57,31 +57,53 @@ const CheckoutPage = () => {
       return;
     }
 
+    if (selectedSeats.length > 8) {
+      toast.error('Maximum 8 tickets allowed per booking');
+      return;
+    }
+
+    const showId = selectedShow?.id;
+    if (!showId) {
+      toast.error('Booking session expired. Please select your show again.');
+      navigate(-1);
+      return;
+    }
+
     setIsProcessing(true);
+
+    const profileId = (user && !isNaN(Number(user.id)) && Number(user.id) > 0)
+      ? Number(user.id)
+      : 1;
+
+    const seatLabels = selectedSeats.map(s => s.code);
+
     const bookingPayload = {
+      profileId,
+      seatLabels,
       movieId: selectedMovie?.id || 1,
-      movieTitle: selectedMovie?.title || 'Kalki 2898 AD',
-      moviePoster: selectedMovie?.posterUrl || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=400&auto=format&fit=crop',
-      theatreName: selectedTheatre?.name || 'PVR Icon: Phoenix Palladium',
-      location: selectedTheatre?.location || 'Lower Parel, Mumbai',
+      movieTitle: selectedMovie?.title || 'Selected Movie',
+      moviePoster: selectedMovie?.posterUrl || '',
+      theatreName: selectedTheatre?.name || '',
+      location: selectedTheatre?.location || selectedTheatre?.address || '',
       showDate: selectedDate || 'Today',
       showTime: selectedShow?.time || '01:45 PM',
-      seats: selectedSeats.map(s => s.code),
+      seats: seatLabels,
       subtotal,
       convenienceFee,
       discount,
       totalPrice: total,
-      userEmail: user?.email || 'guest@filmypass.com'
+      userEmail: user?.email || 'aryan@filmypass.com'
     };
 
     try {
-      const showId = selectedShow?.id || 1002;
       const resultBooking = await bookingApi.createBooking(showId, bookingPayload);
       toast.success('🎉 Booking Confirmed successfully!');
       clearBookingSelection();
       navigate(`/booking/success/${resultBooking.id}`);
     } catch (err) {
-      toast.error('Booking failed. Please try again.');
+      console.error('Booking error:', err);
+      const errMsg = err?.response?.data?.message || err?.message || 'Booking failed. Please try again.';
+      toast.error(errMsg);
     } finally {
       setIsProcessing(false);
     }

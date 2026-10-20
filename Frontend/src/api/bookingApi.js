@@ -1,91 +1,134 @@
 import apiClient from './axios';
 import { MOCK_INITIAL_BOOKINGS } from './mockData';
 
-// Local storage backup for dynamic user created bookings during testing
+// Local storage backup for offline or test persistence
 const getLocalBookings = () => {
-  const saved = localStorage.getItem('filmypass_user_bookings');
-  return saved ? JSON.parse(saved) : MOCK_INITIAL_BOOKINGS;
+  try {
+    const saved = localStorage.getItem('filmypass_user_bookings');
+    return saved ? JSON.parse(saved) : MOCK_INITIAL_BOOKINGS;
+  } catch (e) {
+    return MOCK_INITIAL_BOOKINGS;
+  }
 };
 
 const saveLocalBookings = (bookings) => {
-  localStorage.setItem('filmypass_user_bookings', JSON.stringify(bookings));
+  try {
+    localStorage.setItem('filmypass_user_bookings', JSON.stringify(bookings));
+  } catch (e) {
+    console.warn("Could not save to localStorage", e);
+  }
+};
+
+export const normalizeBooking = (b, fallback = {}) => {
+  if (!b) return null;
+
+  const startsAt = b.showStartsAt ? new Date(b.showStartsAt) : null;
+  const showDate = b.showDate || (startsAt ? startsAt.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' }) : (fallback.showDate || 'Today'));
+  const showTime = b.showTime || (startsAt ? startsAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : (fallback.showTime || '01:45 PM'));
+  const seats = b.seatLabels || b.seats || fallback.seats || [];
+  const rawStatus = b.status || fallback.status || 'CONFIRMED';
+  const normalizedStatus = rawStatus === 'CANCELLED' ? 'Cancelled' : (rawStatus === 'COMPLETED' ? 'Completed' : 'Upcoming');
+  const location = b.theatreAddress || b.location || fallback.location || '';
+  const totalPrice = b.totalAmount ?? b.totalPrice ?? fallback.totalPrice ?? 0;
+
+  return {
+    ...b,
+    id: b.id,
+    movieId: b.movieId || fallback.movieId || 1,
+    movieTitle: b.movieTitle || fallback.movieTitle || 'Movie Ticket',
+    moviePoster: b.moviePoster || fallback.moviePoster || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=400&auto=format&fit=crop',
+    theatreName: b.theatreName || fallback.theatreName || 'Cinema Multiplex',
+    theatreAddress: location,
+    location: location,
+    showDate: showDate,
+    showTime: showTime,
+    showStartsAt: b.showStartsAt || (startsAt ? startsAt.toISOString() : null),
+    seats: Array.isArray(seats) ? seats : [seats],
+    seatLabels: Array.isArray(seats) ? seats : [seats],
+    ticketCount: (Array.isArray(seats) ? seats : [seats]).length,
+    totalPrice: Number(totalPrice),
+    totalAmount: Number(totalPrice),
+    status: normalizedStatus,
+    rawStatus: rawStatus,
+    customerName: b.customerName || fallback.customerName || 'Movie Guest',
+    customerEmail: b.customerEmail || fallback.customerEmail || '',
+    customerPhone: b.customerPhone || fallback.customerPhone || '',
+    qrCode: b.qrCode || `FILMYPASS-BK${b.id}`
+  };
 };
 
 export const bookingApi = {
   // POST /bookings/shows/{showId}
   createBooking: async (showId, bookingData) => {
-    try {
-      const response = await apiClient.post(`/bookings/shows/${showId}`, bookingData);
-      if (response.data) return response.data;
-    } catch (err) {
-      // Fallback: Generate local booking ID & saved state
-    }
-
-    const newBooking = {
-      id: `BK${Math.floor(100000 + Math.random() * 900000)}`,
-      movieId: bookingData.movieId || 1,
-      movieTitle: bookingData.movieTitle || 'Kalki 2898 AD',
-      moviePoster: bookingData.moviePoster || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop',
-      theatreName: bookingData.theatreName || 'PVR Icon: Phoenix Palladium',
-      location: bookingData.location || 'Lower Parel, Mumbai',
-      showDate: bookingData.showDate || 'Today',
-      showTime: bookingData.showTime || '01:45 PM',
-      seats: bookingData.seats || ['E4', 'E5'],
-      ticketCount: bookingData.seats?.length || 2,
-      subtotal: bookingData.subtotal || 600,
-      convenienceFee: bookingData.convenienceFee || 40,
-      discount: bookingData.discount || 0,
-      totalPrice: bookingData.totalPrice || 640,
-      bookingDate: new Date().toISOString().split('T')[0],
-      status: 'Upcoming',
-      qrCode: `FILMYPASS-BK${Math.floor(100000 + Math.random() * 900000)}`
+    const payload = {
+      profileId: Number(bookingData.profileId) || 1,
+      seatLabels: bookingData.seatLabels || bookingData.seats || []
     };
 
-    const current = getLocalBookings();
-    const updated = [newBooking, ...current];
-    saveLocalBookings(updated);
+    const response = await apiClient.post(`/bookings/shows/${showId}`, payload);
+    if (response.data) {
+      const normalized = normalizeBooking(response.data, bookingData);
+      const current = getLocalBookings();
+      saveLocalBookings([normalized, ...current.filter(b => String(b.id) !== String(normalized.id))]);
+      return normalized;
+    }
 
-    return newBooking;
+    throw new Error('Server returned empty booking confirmation.');
   },
 
   // GET /bookings/{bookingId}
   getBookingById: async (bookingId) => {
     try {
       const response = await apiClient.get(`/bookings/${bookingId}`);
-      if (response.data) return response.data;
+      if (response.data) {
+        return normalizeBooking(response.data);
+      }
     } catch (err) {
-      // Fallback
+      console.warn("Unable to fetch booking from server:", err.message);
     }
 
     const bookings = getLocalBookings();
-    const found = bookings.find(b => b.id === bookingId);
-    return found || bookings[0];
+    const found = bookings.find(b => String(b.id) === String(bookingId));
+    return found ? normalizeBooking(found) : normalizeBooking(bookings[0]);
   },
 
   // POST /bookings/{bookingId}/cancel
-  cancelBooking: async (bookingId) => {
+  cancelBooking: async (bookingId, profileId = 1) => {
+    const validProfileId = (!isNaN(Number(profileId)) && Number(profileId) > 0) ? Number(profileId) : 1;
     try {
-      const response = await apiClient.post(`/bookings/${bookingId}/cancel`);
-      if (response.data) return response.data;
+      const response = await apiClient.post(`/bookings/${bookingId}/cancel`, {
+        profileId: validProfileId
+      });
+      if (response.data) {
+        const normalized = normalizeBooking(response.data);
+        const current = getLocalBookings();
+        const updated = current.map(b => String(b.id) === String(bookingId) ? { ...b, status: 'Cancelled', rawStatus: 'CANCELLED' } : b);
+        saveLocalBookings(updated);
+        return normalized;
+      }
     } catch (err) {
-      // Fallback
+      console.warn("Unable to cancel booking on server:", err.message);
+      throw err;
     }
 
-    const bookings = getLocalBookings();
-    const updated = bookings.map(b => b.id === bookingId ? { ...b, status: 'Cancelled' } : b);
+    const current = getLocalBookings();
+    const updated = current.map(b => String(b.id) === String(bookingId) ? { ...b, status: 'Cancelled', rawStatus: 'CANCELLED' } : b);
     saveLocalBookings(updated);
     return { success: true, message: 'Booking cancelled successfully' };
   },
 
   // GET /profiles/{profileId}/bookings
-  getUserBookings: async (profileId = 'user123') => {
+  getUserBookings: async (profileId = 1) => {
+    const validProfileId = (!isNaN(Number(profileId)) && Number(profileId) > 0) ? Number(profileId) : 1;
     try {
-      const response = await apiClient.get(`/profiles/${profileId}/bookings`);
-      if (response.data && Array.isArray(response.data)) return response.data;
+      const response = await apiClient.get(`/profiles/${validProfileId}/bookings`);
+      if (response.data && Array.isArray(response.data)) {
+        return response.data.map(b => normalizeBooking(b));
+      }
     } catch (err) {
-      // Fallback
+      console.warn("Unable to fetch user bookings from server:", err.message);
     }
 
-    return getLocalBookings();
+    return getLocalBookings().map(b => normalizeBooking(b));
   }
 };
