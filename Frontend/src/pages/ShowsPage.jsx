@@ -23,30 +23,91 @@ const ShowsPage = () => {
 
   const [movie, setMovie] = useState(null);
   const [theatres, setTheatres] = useState([]);
-  const [selectedDate, setDate] = useState("Today");
+  const [error, setError] = useState("");
+  const [selectedDate, setDate] = useState(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  });
   const [loading, setLoading] = useState(true);
   const [sortNearest, setSortNearest] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError("");
+
       try {
         const m = await movieApi.getMovieById(movieId || 1);
-        const t = await theatreApi.getTheatresByCity(
-          selectedCity.name || selectedCity.id,
-          userCoords,
+
+        const city = selectedCity.name || selectedCity.id;
+
+        const shows = await theatreApi.getShowsByCity(
+          city,
+          selectedDate,
+          movieId ? Number(movieId) : m.id,
         );
+        console.log("Selected city:", city);
+        console.log("Backend shows response:", shows);
+        console.log("Backend shows:", shows);
+
+        // Group backend shows by theatre
+        const theatreMap = new Map();
+
+        shows.forEach((show) => {
+          const theatre = show.theatre;
+
+          if (!theatre) return;
+
+          if (!theatreMap.has(theatre.id)) {
+            theatreMap.set(theatre.id, {
+              id: theatre.id,
+              name: theatre.name,
+              location: theatre.address || theatre.city || "",
+              city: theatre.city,
+              distance: null,
+              amenities: [],
+              shows: [],
+            });
+          }
+
+          const startAt = new Date(show.startAt);
+
+          const time = startAt.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          });
+
+          theatreMap.get(theatre.id).shows.push({
+            ...show,
+            time,
+            price: show.ticketPrice,
+            status: show.availableSeats > 0 ? "available" : "sold_out",
+          });
+        });
+
         setMovie(m);
-        setTheatres(t);
+        setTheatres(Array.from(theatreMap.values()));
         setSelectedMovie(m);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to fetch movie shows:", err);
+        setTheatres([]);
+        setError(
+          "Unable to load shows. Please check your connection and try again.",
+        );
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
-  }, [movieId, selectedCity, userCoords]);
+
+    if (selectedCity) {
+      fetchData();
+    }
+  }, [movieId, selectedCity, selectedDate, userCoords]);
 
   const handleSelectShowtime = (theatre, show) => {
     setSelectedMovie(movie);
@@ -179,13 +240,35 @@ const ShowsPage = () => {
 
       {/* Theatres Listing */}
       <div className="space-y-6">
-        {displayedTheatres.map((theatre) => (
-          <TheatreCard
-            key={theatre.id}
-            theatre={theatre}
-            onSelectShow={handleSelectShowtime}
-          />
-        ))}
+        {error ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-center">
+            <p className="font-bold text-red-700">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-3 rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700"
+            >
+              Try Again
+            </button>
+          </div>
+        ) : displayedTheatres.length > 0 ? (
+          displayedTheatres.map((theatre) => (
+            <TheatreCard
+              key={theatre.id}
+              theatre={theatre}
+              onSelectShow={handleSelectShowtime}
+            />
+          ))
+        ) : (
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+            <h3 className="text-lg font-bold text-slate-800">
+              No Shows Available
+            </h3>
+            <p className="mt-2 text-sm text-slate-500">
+              No shows were found for this movie, city, and date. Please select
+              another date.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

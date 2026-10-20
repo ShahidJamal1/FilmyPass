@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import React, { useState } from "react";
+import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
 
 const DateSelector = ({ selectedDate, onSelectDate }) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -9,17 +9,18 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
   const generateUpcomingDays = () => {
     const daysList = [];
     const today = new Date();
-    
+
     for (let i = 0; i < 7; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
 
-      const dayName = i === 0 ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' });
-      const dayNum = d.getDate().toString().padStart(2, '0');
-      const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+      const dayName =
+        i === 0 ? "Today" : d.toLocaleDateString("en-US", { weekday: "short" });
+      const dayNum = d.getDate().toString().padStart(2, "0");
+      const monthName = d.toLocaleDateString("en-US", { month: "short" });
 
       const formattedLabel = `${dayName} ${dayNum} ${monthName}`;
-      const isoString = d.toISOString().split('T')[0];
+      const isoString = d.toISOString().split("T")[0];
 
       daysList.push({
         label: formattedLabel,
@@ -27,7 +28,7 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
         dateNum: dayNum,
         monthName: monthName,
         isoString: isoString,
-        isToday: i === 0
+        isToday: i === 0,
       });
     }
     return daysList;
@@ -37,22 +38,22 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
 
   // If selectedDate is a custom date outside the 7-day strip, add it dynamically
   const isSelectedInQuick = quickDays.some(
-    item => selectedDate === item.label || (item.isToday && (selectedDate === 'Today' || selectedDate.includes('Today')))
+    (item) => selectedDate === item.isoString,
   );
 
   let displayedDays = [...quickDays];
-  if (!isSelectedInQuick && selectedDate && selectedDate !== 'Today') {
-    const parts = selectedDate.split(' ');
-    const dayName = parts[0] || 'Selected';
-    const dateNum = parts[1] || '';
-    const monthName = parts[2] || '';
+  if (!isSelectedInQuick && selectedDate && selectedDate !== "Today") {
+    const parts = selectedDate.split(" ");
+    const dayName = parts[0] || "Selected";
+    const dateNum = parts[1] || "";
+    const monthName = parts[2] || "";
 
     displayedDays.unshift({
       label: selectedDate,
       dayName: dayName,
       dateNum: dateNum,
       monthName: monthName,
-      isCustom: true
+      isCustom: true,
     });
   }
 
@@ -79,20 +80,27 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
 
   const handlePickCalendarDate = (dateObj) => {
     if (!dateObj || dateObj < today) return;
-    
-    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-    const dayNum = dateObj.getDate().toString().padStart(2, '0');
-    const monthName = dateObj.toLocaleDateString('en-US', { month: 'short' });
-    
+
+    const dayName = dateObj.toLocaleDateString("en-US", { weekday: "short" });
+    const dayNum = dateObj.getDate().toString().padStart(2, "0");
+    const monthName = dateObj.toLocaleDateString("en-US", { month: "short" });
+
     const formatted = `${dayName} ${dayNum} ${monthName}`;
-    onSelectDate(formatted);
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const day = String(dateObj.getDate()).padStart(2, "0");
+
+    onSelectDate(`${year}-${month}-${day}`);
     setIsCalendarOpen(false);
   };
 
   const handlePrevMonth = () => {
     const prev = new Date(currentMonthDate);
     prev.setMonth(prev.getMonth() - 1);
-    if (prev.getMonth() >= new Date().getMonth() || prev.getFullYear() > new Date().getFullYear()) {
+    if (
+      prev.getMonth() >= new Date().getMonth() ||
+      prev.getFullYear() > new Date().getFullYear()
+    ) {
       setCurrentMonthDate(prev);
     }
   };
@@ -106,7 +114,6 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
   return (
     <div className="relative">
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
-        
         {/* Calendar Trigger Button */}
         <button
           onClick={() => setIsCalendarOpen(!isCalendarOpen)}
@@ -121,16 +128,16 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
 
         {/* Dynamic Days Strip */}
         {displayedDays.map((item) => {
-          const isSelected = selectedDate === item.label || (item.isToday && (selectedDate === 'Today' || selectedDate.includes('Today')));
-          
+          const isSelected = selectedDate === item.isoString;
+
           return (
             <button
               key={item.label}
-              onClick={() => onSelectDate(item.label)}
+              onClick={() => onSelectDate(item.isoString)}
               className={`px-3.5 py-2 rounded-2xl flex flex-col items-center justify-center shrink-0 border transition-all ${
                 isSelected
-                  ? 'bg-gradient-to-r from-brand-600 to-rose-500 text-white border-brand-600 shadow-glow font-bold scale-105 ring-2 ring-rose-300 ring-offset-1'
-                  : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 font-medium hover:bg-slate-50'
+                  ? "bg-gradient-to-r from-brand-600 to-rose-500 text-white border-brand-600 shadow-glow font-bold scale-105 ring-2 ring-rose-300 ring-offset-1"
+                  : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 font-medium hover:bg-slate-50"
               }`}
             >
               <span className="text-[10px] uppercase tracking-wider font-extrabold opacity-85">
@@ -151,7 +158,10 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-brand-600" />
               <h4 className="font-extrabold text-sm text-slate-900">
-                {currentMonthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                {currentMonthDate.toLocaleDateString("en-US", {
+                  month: "long",
+                  year: "numeric",
+                })}
               </h4>
             </div>
 
@@ -179,7 +189,13 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
 
           {/* Weekday Labels */}
           <div className="grid grid-cols-7 text-center text-[11px] font-bold text-slate-400 mb-2">
-            <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            <span>Su</span>
+            <span>Mo</span>
+            <span>Tu</span>
+            <span>We</span>
+            <span>Th</span>
+            <span>Fr</span>
+            <span>Sa</span>
           </div>
 
           {/* Days Grid */}
@@ -188,7 +204,7 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
               if (!dateObj) return <div key={idx} />;
 
               const isPast = dateObj < today;
-              const formattedDateStr = `${dateObj.toLocaleDateString('en-US', { weekday: 'short' })} ${dateObj.getDate().toString().padStart(2, '0')} ${dateObj.toLocaleDateString('en-US', { month: 'short' })}`;
+              const formattedDateStr = `${dateObj.toLocaleDateString("en-US", { weekday: "short" })} ${dateObj.getDate().toString().padStart(2, "0")} ${dateObj.toLocaleDateString("en-US", { month: "short" })}`;
               const isSelected = selectedDate === formattedDateStr;
 
               return (
@@ -198,10 +214,10 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
                   onClick={() => handlePickCalendarDate(dateObj)}
                   className={`h-9 w-9 mx-auto rounded-xl flex items-center justify-center font-bold transition-all ${
                     isPast
-                      ? 'text-slate-300 cursor-not-allowed'
+                      ? "text-slate-300 cursor-not-allowed"
                       : isSelected
-                      ? 'bg-brand-600 text-white shadow-glow scale-110'
-                      : 'hover:bg-rose-50 hover:text-brand-600 text-slate-700'
+                        ? "bg-brand-600 text-white shadow-glow scale-110"
+                        : "hover:bg-rose-50 hover:text-brand-600 text-slate-700"
                   }`}
                 >
                   {dateObj.getDate()}
@@ -212,12 +228,18 @@ const DateSelector = ({ selectedDate, onSelectDate }) => {
 
           <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
             <span className="text-slate-500 font-semibold">
-              Selected: <strong className="text-brand-600 font-extrabold">{selectedDate}</strong>
+              Selected:{" "}
+              <strong className="text-brand-600 font-extrabold">
+                {selectedDate}
+              </strong>
             </span>
             <button
               onClick={() => {
-                const todayFormatted = `${today.toLocaleDateString('en-US', { weekday: 'short' })} ${today.getDate().toString().padStart(2, '0')} ${today.toLocaleDateString('en-US', { month: 'short' })}`;
-                onSelectDate(todayFormatted);
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, "0");
+                const day = String(today.getDate()).padStart(2, "0");
+
+                onSelectDate(`${year}-${month}-${day}`);
                 setIsCalendarOpen(false);
               }}
               className="text-brand-600 font-extrabold hover:underline"
