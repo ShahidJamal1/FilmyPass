@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { bookingApi } from '../api/bookingApi';
+import { getLocalPoster, createFallbackPoster } from '../api/tmdbApi';
 import { useAuth } from '../context/AuthContext';
 import TicketCard from '../components/booking/TicketCard';
 import Modal from '../components/common/Modal';
@@ -106,6 +107,12 @@ const MyBookingsPage = () => {
             const showTime = b.showTime || (startsAt ? startsAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '01:45 PM');
             const isUpcoming = (b.status === 'Upcoming' || b.rawStatus === 'CONFIRMED');
 
+            const posterSrc =
+              getLocalPoster(b.movieTitle) ||
+              (b.moviePoster && !b.moviePoster.includes('image.tmdb.org') ? b.moviePoster : null) ||
+              getLocalPoster(b.movieTitle) ||
+              '/posters/3-idiots.jpg';
+
             return (
               <div
                 key={b.id}
@@ -113,9 +120,17 @@ const MyBookingsPage = () => {
               >
                 <div className="flex items-start gap-4">
                   <img
-                    src={b.moviePoster || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=400&auto=format&fit=crop'}
+                    src={posterSrc}
                     alt={b.movieTitle || 'Movie'}
-                    className="w-20 h-28 object-cover rounded-xl shadow-md shrink-0"
+                    onError={(e) => {
+                      const local = getLocalPoster(b.movieTitle);
+                      if (local && !e.target.src.includes(local)) {
+                        e.target.src = local;
+                      } else {
+                        e.target.src = createFallbackPoster(b.movieTitle);
+                      }
+                    }}
+                    className="w-20 h-28 object-cover rounded-xl shadow-md shrink-0 border border-slate-100"
                   />
 
                   <div className="space-y-1.5">

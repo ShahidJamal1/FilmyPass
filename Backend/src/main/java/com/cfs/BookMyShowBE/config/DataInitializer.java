@@ -71,61 +71,61 @@ public class DataInitializer implements CommandLineRunner {
         List<MovieSeed> seeds = List.of(
                 new MovieSeed(585268L, "War 2", "Hindi", "Action", 155, "UA",
                         "An action thriller about a mysterious mission and powerful enemies.",
-                        "https://image.tmdb.org/t/p/w500/aOSDKvqglKVa3SYy4CPXYUAfDlf.jpg", "https://www.youtube.com/embed/tQ0mzXRk-oM"),
+                        "/posters/war-2.jpg", "https://www.youtube.com/embed/tQ0mzXRk-oM"),
                 new MovieSeed(811941L, "Devara: Part 1", "Telugu", "Action", 170, "UA",
                         "A high-energy action drama following a fearless protagonist protecting his coastal clan.",
-                        "https://image.tmdb.org/t/p/w500/lQfuaXjANoTsdx5iS0gCXlK9D2L.jpg", "https://www.youtube.com/embed/Fw91n6mN3Yw"),
+                        "/posters/devara-part-1.jpg", "https://www.youtube.com/embed/Fw91n6mN3Yw"),
                 new MovieSeed(634649L, "Spider-Man: No Way Home", "English", "Action", 148, "UA",
                         "Peter Parker seeks Doctor Strange's help to make his identity secret again, breaking open the multiverse.",
-                        "https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg", "https://www.youtube.com/embed/JfVOs4VSpmA"),
+                        "/posters/spider-man-no-way-home.jpg", "https://www.youtube.com/embed/JfVOs4VSpmA"),
                 new MovieSeed(20453L, "3 Idiots", "Hindi", "Comedy Drama", 170, "U",
                         "Two friends search for their long lost companion while revisiting their college days with Rancho.",
-                        "https://image.tmdb.org/t/p/w500/66A9MqXOyVFCssoloscw79z8Tew.jpg", "https://www.youtube.com/embed/K0eDlFX9GMc"),
+                        "/posters/3-idiots.jpg", "https://www.youtube.com/embed/K0eDlFX9GMc"),
                 new MovieSeed(579974L, "RRR", "Telugu", "Action Drama", 187, "UA",
                         "An epic historical action drama about friendship, courage and sacrifice of two Indian revolutionaries.",
-                        "https://image.tmdb.org/t/p/w500/u0XUBNQWlOvrh0Gd97ARGpIkL0.jpg", "https://www.youtube.com/embed/NgBoAMQh1gI"),
+                        "/posters/rrr.jpg", "https://www.youtube.com/embed/NgBoAMQh1gI"),
                 new MovieSeed(299534L, "Avengers: Endgame", "English", "Superhero", 181, "UA",
                         "After devastating events, the surviving Avengers assemble to reverse Thanos's actions and restore balance.",
-                        "https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg", "https://www.youtube.com/embed/TcMBFSGVi1c"),
+                        "/posters/avengers-endgame.jpg", "https://www.youtube.com/embed/TcMBFSGVi1c"),
                 new MovieSeed(79464L, "Rockstar", "Hindi", "Romance", 158, "UA",
                         "Janardhan pursues his passion for becoming a rockstar, leading through love, heartbreak and musical brilliance.",
-                        "https://image.tmdb.org/t/p/w500/3UseBwzKsUmMN37XcahJSVYRWkf.jpg", "https://www.youtube.com/embed/bD5FShPZdpw"),
+                        "/posters/rockstar.jpg", "https://www.youtube.com/embed/bD5FShPZdpw"),
                 new MovieSeed(770906L, "Salaar: Part 1 – Ceasefire", "Telugu", "Action", 178, "UA",
                         "A gang leader tries to keep a promise made to his dying friend and takes on other criminal gangs.",
-                        "https://image.tmdb.org/t/p/w500/nlu9WbcetNFRGXXPWITr30ob7W6.jpg", "https://www.youtube.com/embed/4GPvYMKtrtI"),
+                        "/posters/salaar-part-1-ceasefire.jpg", "https://www.youtube.com/embed/4GPvYMKtrtI"),
                 new MovieSeed(27205L, "Inception", "English", "Science Fiction", 148, "UA",
                         "A thief who steals corporate secrets through dream-sharing technology is given the task of planting an idea.",
-                        "https://image.tmdb.org/t/p/w500/edv5CZvWj09upOsy2Y6IwDhK8bt.jpg", "https://www.youtube.com/embed/YoHD9XEInc0"),
+                        "/posters/inception.jpg", "https://www.youtube.com/embed/YoHD9XEInc0"),
                 new MovieSeed(11807L, "Jab We Met", "Hindi", "Romance", 136, "UA",
                         "A depressed wealthy businessman's life changes after he meets a bubbly and feisty Punjabi girl on a train.",
-                        "https://image.tmdb.org/t/p/w500/sQ7A7jyTbkK90vjd8yCRuoyL9CK.jpg", "https://www.youtube.com/embed/bQ_f_oU6h-4"),
+                        "/posters/jab-we-met.jpg", "https://www.youtube.com/embed/bQ_f_oU6h-4"),
                 new MovieSeed(256040L, "Baahubali: The Beginning", "Telugu", "Historical Action", 167, "UA",
                         "In the kingdom of Mahishmati, a young man raised by tribals discovers his royal lineage.",
-                        "https://image.tmdb.org/t/p/w500/e9ZEuHGHZ06AToHlfN1L7nejJ7W.jpg", "https://www.youtube.com/embed/sOEg_YZQsTI"),
+                        "/posters/baahubali-the-beginning.jpg", "https://www.youtube.com/embed/sOEg_YZQsTI"),
                 new MovieSeed(414906L, "The Batman", "English", "Crime Thriller", 139, "UA",
                         "Batman ventures into Gotham City's underworld when a sadistic killer leaves behind a trail of cryptic clues.",
-                        "https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg", "https://www.youtube.com/embed/mqqft2x_Aa4"),
+                        "/posters/the-batman.jpg", "https://www.youtube.com/embed/mqqft2x_Aa4"),
                 new MovieSeed(596650L, "Chhichhore", "Hindi", "Comedy Drama", 143, "U",
                         "A tragic incident forces middle-aged Anirudh to reunite with his college friends and relive memories.",
-                        "https://image.tmdb.org/t/p/w500/cGDPQtQ5igtPMt3oJ6BCAor6dFp.jpg", "https://www.youtube.com/embed/-KKlF-VxOfo"),
+                        "/posters/chhichhore.jpg", "https://www.youtube.com/embed/-KKlF-VxOfo"),
                 new MovieSeed(866444L, "Pathaan", "Hindi", "Spy Action", 146, "UA",
                         "An Indian agent races against a doomsday clock as a ruthless mercenary with a bitter vendetta mounts an attack.",
-                        "https://image.tmdb.org/t/p/w500/arf00BkwvXo0CFKbaD9OpqdE4Nu.jpg", "https://www.youtube.com/embed/vqu4z34wENw"),
+                        "/posters/pathaan.jpg", "https://www.youtube.com/embed/vqu4z34wENw"),
                 new MovieSeed(800609L, "Pushpa: The Rise", "Telugu", "Action", 175, "UA",
                         "A laborer rises through the ranks of a red sandalwood smuggling syndicate, making dangerous enemies.",
-                        "https://image.tmdb.org/t/p/w500/4DpNRjV7ITZ1GzCvrvCk86th0w.jpg", "https://www.youtube.com/embed/Q1NKMPhP8PY"),
+                        "/posters/pushpa-the-rise.jpg", "https://www.youtube.com/embed/Q1NKMPhP8PY"),
                 new MovieSeed(141052L, "Justice League", "English", "Superhero", 148, "UA",
                         "Fueled by restored faith in humanity, Bruce Wayne enlists new allies to face an even greater enemy.",
-                        "https://image.tmdb.org/t/p/w500/eifGNCSDuxJeS1loAXil5bIGgvC.jpg", "https://www.youtube.com/embed/3cxixDgHUYw"),
+                        "/posters/justice-league.jpg", "https://www.youtube.com/embed/3cxixDgHUYw"),
                 new MovieSeed(801688L, "Kalki 2898 AD", "Telugu", "Sci-Fi, Action", 181, "UA",
                         "A modern avatar of Lord Vishnu descends to Earth to protect humanity from dark forces in dystopian Kasi.",
-                        "https://image.tmdb.org/t/p/w500/rstcAnBeCkxNQjNp3YXrF6IP1tW.jpg", "https://www.youtube.com/embed/k9N_7N6P30Y"),
+                        "/posters/kalki-2898-ad.jpg", "https://www.youtube.com/embed/k9N_7N6P30Y"),
                 new MovieSeed(1150027L, "Stree 2: Sarkate Ka Aatank", "Hindi", "Comedy", 149, "UA",
                         "Chanderi is once again haunted by a terrifying entity called Sarkate. Vicky and friends must unite.",
-                        "https://image.tmdb.org/t/p/w500/nfnhwfUEFuSOxxf4jDdBlY6Lccw.jpg", "https://www.youtube.com/embed/KVnheXwqF08"),
+                        "/posters/stree-2-sarkate-ka-aatank.jpg", "https://www.youtube.com/embed/KVnheXwqF08"),
                 new MovieSeed(693134L, "Dune: Part Two", "English", "Sci-Fi", 166, "UA",
                         "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators.",
-                        "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg", "https://www.youtube.com/embed/Way9Dexny3w"),
+                        "/posters/dune-part-two.jpg", "https://www.youtube.com/embed/Way9Dexny3w"),
                 new MovieSeed(1181283L, "Jigra", "Hindi, Telugu", "Action, Thriller, Drama", 155, "UA16+",
                         "A fiercely protective sister undertakes an impossible prison break across international borders to save her brother.",
                         "/posters/jigra.jpg", "https://www.youtube.com/embed/Pj13k8f2lqU"),
@@ -222,6 +222,32 @@ public class DataInitializer implements CommandLineRunner {
         for (Movie m : allDbMovies) {
             if (m.getTrailerUrl() == null || m.getTrailerUrl().isBlank() || m.getTrailerUrl().contains("example.com")) {
                 m.setTrailerUrl("https://www.youtube.com/embed/5aG6A8Wj0B0");
+                movieRepository.save(m);
+            }
+
+            // Guarantee all movies use reliable clean local poster assets without broken tmdb URLs
+            String poster = m.getPosterUrl();
+            if (poster == null || poster.isBlank() || poster.contains("image.tmdb.org")) {
+                String title = m.getTitle() != null ? m.getTitle().toLowerCase() : "";
+                if (title.contains("war")) m.setPosterUrl("/posters/war-2.jpg");
+                else if (title.contains("devara")) m.setPosterUrl("/posters/devara-part-1.jpg");
+                else if (title.contains("spider")) m.setPosterUrl("/posters/spider-man-no-way-home.jpg");
+                else if (title.contains("3 idiots")) m.setPosterUrl("/posters/3-idiots.jpg");
+                else if (title.contains("rrr")) m.setPosterUrl("/posters/rrr.jpg");
+                else if (title.contains("avengers") || title.contains("endgame")) m.setPosterUrl("/posters/avengers-endgame.jpg");
+                else if (title.contains("rockstar")) m.setPosterUrl("/posters/rockstar.jpg");
+                else if (title.contains("salaar")) m.setPosterUrl("/posters/salaar-part-1-ceasefire.jpg");
+                else if (title.contains("inception")) m.setPosterUrl("/posters/inception.jpg");
+                else if (title.contains("jab we met")) m.setPosterUrl("/posters/jab-we-met.jpg");
+                else if (title.contains("baahubali")) m.setPosterUrl("/posters/baahubali-the-beginning.jpg");
+                else if (title.contains("batman")) m.setPosterUrl("/posters/the-batman.jpg");
+                else if (title.contains("chhichhore")) m.setPosterUrl("/posters/chhichhore.jpg");
+                else if (title.contains("pathaan")) m.setPosterUrl("/posters/pathaan.jpg");
+                else if (title.contains("pushpa")) m.setPosterUrl("/posters/pushpa-the-rise.jpg");
+                else if (title.contains("justice league")) m.setPosterUrl("/posters/justice-league.jpg");
+                else if (title.contains("kalki")) m.setPosterUrl("/posters/kalki-2898-ad.jpg");
+                else if (title.contains("stree")) m.setPosterUrl("/posters/stree-2-sarkate-ka-aatank.jpg");
+                else if (title.contains("dune")) m.setPosterUrl("/posters/dune-part-two.jpg");
                 movieRepository.save(m);
             }
         }

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Search, Film, MapPin, Calendar, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MOCK_MOVIES, MOCK_THEATRES, MOCK_EVENTS } from "../../api/mockData";
+import { getLocalPoster, createFallbackPoster } from "../../api/tmdbApi";
 
 const SearchBar = ({ isCompact = false }) => {
   const [query, setQuery] = useState("");
@@ -116,8 +117,16 @@ const SearchBar = ({ isCompact = false }) => {
                       className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors"
                     >
                       <img
-                        src={movie.posterUrl}
+                        src={getLocalPoster(movie.title) || movie.posterUrl}
                         alt={movie.title}
+                        onError={(e) => {
+                          const local = getLocalPoster(movie.title);
+                          if (local && !e.target.src.includes(local)) {
+                            e.target.src = local;
+                          } else {
+                            e.target.src = createFallbackPoster(movie.title);
+                          }
+                        }}
                         className="w-9 h-12 object-cover rounded-md shadow-sm"
                       />
                       <div>

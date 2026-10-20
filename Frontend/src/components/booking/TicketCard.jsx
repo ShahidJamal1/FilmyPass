@@ -1,5 +1,6 @@
 import React from 'react';
 import { Film, MapPin, Calendar, Clock, QrCode, Download, Printer, CheckCircle } from 'lucide-react';
+import { getLocalPoster, createFallbackPoster } from '../../api/tmdbApi';
 import toast from 'react-hot-toast';
 
 const TicketCard = ({ booking, showActions = true }) => {
@@ -16,7 +17,7 @@ const TicketCard = ({ booking, showActions = true }) => {
   const movieTitle = booking.movieTitle || 'Movie Ticket';
   const theatreName = booking.theatreName || 'Cinema Multiplex';
   const location = booking.location || booking.theatreAddress || 'Cinema Hall';
-  
+
   const startsAt = booking.showStartsAt ? new Date(booking.showStartsAt) : null;
   const showDate = booking.showDate || (startsAt ? startsAt.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' }) : 'Today');
   const showTime = booking.showTime || (startsAt ? startsAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '01:45 PM');
@@ -26,22 +27,31 @@ const TicketCard = ({ booking, showActions = true }) => {
   const totalPrice = booking.totalPrice ?? booking.totalAmount ?? 0;
   const status = booking.status === 'CONFIRMED' || booking.status === 'Upcoming' ? 'Confirmed' : (booking.status || 'Confirmed');
 
+  const posterSrc =
+    getLocalPoster(movieTitle) ||
+    (booking.moviePoster && !booking.moviePoster.includes('image.tmdb.org') ? booking.moviePoster : null) ||
+    getLocalPoster(movieTitle) ||
+    '/posters/3-idiots.jpg';
+
   return (
     <div className="w-full max-w-2xl mx-auto bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-soft-lg transition-all">
-      
       {/* Top Header */}
       <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white">
             <Film className="w-4 h-4" />
           </div>
-          <span className="font-extrabold text-base tracking-tight">FilmyPass <span className="text-rose-400 font-normal">M-Ticket</span></span>
+          <span className="font-extrabold text-base tracking-tight">
+            FilmyPass <span className="text-rose-400 font-normal">M-Ticket</span>
+          </span>
         </div>
-        <div className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border ${
-          status === 'Cancelled'
-            ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-            : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-        }`}>
+        <div
+          className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border ${
+            status === 'Cancelled'
+              ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+              : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+          }`}
+        >
           <CheckCircle className="w-3.5 h-3.5" />
           <span>{status}</span>
         </div>
@@ -49,15 +59,22 @@ const TicketCard = ({ booking, showActions = true }) => {
 
       {/* Ticket Main Content */}
       <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-        
         {/* Movie Poster & Title info */}
         <div className="md:col-span-8 flex items-start gap-4">
           <img
-            src={booking.moviePoster || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=400&auto=format&fit=crop'}
+            src={posterSrc}
             alt={movieTitle}
-            className="w-24 h-36 object-cover rounded-xl shadow-md shrink-0"
+            onError={(e) => {
+              const local = getLocalPoster(movieTitle);
+              if (local && !e.target.src.includes(local)) {
+                e.target.src = local;
+              } else {
+                e.target.src = createFallbackPoster(movieTitle);
+              }
+            }}
+            className="w-24 h-36 object-cover rounded-xl shadow-md shrink-0 border border-slate-100"
           />
-          
+
           <div className="space-y-2">
             <h3 className="text-xl font-extrabold text-slate-900 leading-tight">
               {movieTitle}
@@ -101,7 +118,6 @@ const TicketCard = ({ booking, showActions = true }) => {
           </div>
           <div className="text-[9px] text-slate-400">Scan at entrance gate</div>
         </div>
-
       </div>
 
       {/* Decorative Ticket Perforated Tear Line */}
@@ -116,7 +132,9 @@ const TicketCard = ({ booking, showActions = true }) => {
         <div>
           <span>Total Paid: </span>
           <span className="font-extrabold text-slate-900 text-sm">₹{totalPrice}</span>
-          <span className="text-slate-400 ml-2">({ticketCount} {ticketCount === 1 ? 'ticket' : 'tickets'})</span>
+          <span className="text-slate-400 ml-2">
+            ({ticketCount} {ticketCount === 1 ? 'ticket' : 'tickets'})
+          </span>
         </div>
 
         {showActions && (
@@ -138,7 +156,6 @@ const TicketCard = ({ booking, showActions = true }) => {
           </div>
         )}
       </div>
-
     </div>
   );
 };

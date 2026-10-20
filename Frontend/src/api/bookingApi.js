@@ -1,5 +1,6 @@
 import apiClient from './axios';
 import { MOCK_INITIAL_BOOKINGS } from './mockData';
+import { getLocalPoster } from './tmdbApi';
 
 // Local storage backup for offline or test persistence
 const getLocalBookings = () => {
@@ -30,13 +31,23 @@ export const normalizeBooking = (b, fallback = {}) => {
   const normalizedStatus = rawStatus === 'CANCELLED' ? 'Cancelled' : (rawStatus === 'COMPLETED' ? 'Completed' : 'Upcoming');
   const location = b.theatreAddress || b.location || fallback.location || '';
   const totalPrice = b.totalAmount ?? b.totalPrice ?? fallback.totalPrice ?? 0;
+  const movieTitle = b.movieTitle || fallback.movieTitle || 'Movie Ticket';
+
+  // ALWAYS resolve authentic local poster asset from title
+  const localPoster = getLocalPoster(movieTitle);
+  const finalPoster =
+    localPoster ||
+    (b.moviePoster && !b.moviePoster.includes('image.tmdb.org') ? b.moviePoster : null) ||
+    fallback.moviePoster ||
+    localPoster ||
+    '/posters/3-idiots.jpg';
 
   return {
     ...b,
     id: b.id,
     movieId: b.movieId || fallback.movieId || 1,
-    movieTitle: b.movieTitle || fallback.movieTitle || 'Movie Ticket',
-    moviePoster: b.moviePoster || fallback.moviePoster || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=400&auto=format&fit=crop',
+    movieTitle: movieTitle,
+    moviePoster: finalPoster,
     theatreName: b.theatreName || fallback.theatreName || 'Cinema Multiplex',
     theatreAddress: location,
     location: location,

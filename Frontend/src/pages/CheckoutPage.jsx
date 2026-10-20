@@ -4,6 +4,7 @@ import { useBooking } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
 import { bookingApi } from '../api/bookingApi';
 import { MOCK_OFFERS } from '../api/mockData';
+import { getLocalPoster, createFallbackPoster } from '../api/tmdbApi';
 import { ShieldCheck, Ticket, Tag, CreditCard, Smartphone, Building2, Wallet, ArrowRight, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -76,13 +77,17 @@ const CheckoutPage = () => {
       : 1;
 
     const seatLabels = selectedSeats.map(s => s.code);
+    const resolvedPoster =
+      getLocalPoster(selectedMovie?.title) ||
+      (selectedMovie?.posterUrl && !selectedMovie.posterUrl.includes('image.tmdb.org') ? selectedMovie.posterUrl : null) ||
+      '/posters/3-idiots.jpg';
 
     const bookingPayload = {
       profileId,
       seatLabels,
       movieId: selectedMovie?.id || 1,
       movieTitle: selectedMovie?.title || 'Selected Movie',
-      moviePoster: selectedMovie?.posterUrl || '',
+      moviePoster: resolvedPoster,
       theatreName: selectedTheatre?.name || '',
       location: selectedTheatre?.location || selectedTheatre?.address || '',
       showDate: selectedDate || 'Today',
@@ -126,9 +131,21 @@ const CheckoutPage = () => {
           {/* Movie & Show Info Card */}
           <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-soft flex items-start gap-4">
             <img
-              src={selectedMovie?.posterUrl || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=400&auto=format&fit=crop'}
+              src={
+                getLocalPoster(selectedMovie?.title) ||
+                (selectedMovie?.posterUrl && !selectedMovie.posterUrl.includes('image.tmdb.org') ? selectedMovie.posterUrl : null) ||
+                '/posters/3-idiots.jpg'
+              }
               alt={selectedMovie?.title || 'Movie'}
-              className="w-20 h-28 object-cover rounded-xl shadow-md shrink-0"
+              onError={(e) => {
+                const local = getLocalPoster(selectedMovie?.title);
+                if (local && !e.target.src.includes(local)) {
+                  e.target.src = local;
+                } else {
+                  e.target.src = createFallbackPoster(selectedMovie?.title);
+                }
+              }}
+              className="w-20 h-28 object-cover rounded-xl shadow-md shrink-0 border border-slate-100"
             />
             <div className="space-y-1">
               <h2 className="text-xl font-extrabold text-slate-900 leading-tight">

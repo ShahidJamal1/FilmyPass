@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Ticket, Play, Star, Clock, Globe, Shield } from "lucide-react";
 import Modal from "../common/Modal";
+import { getLocalPoster, createFallbackPoster } from "../../api/tmdbApi";
 
 const MovieBanner = ({ movies }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -19,8 +20,14 @@ const MovieBanner = ({ movies }) => {
         {/* Background Backdrop with Gradient Overlays */}
         <div className="absolute inset-0 z-0">
           <img
-            src={currentMovie.bannerUrl || currentMovie.posterUrl}
+            src={getLocalPoster(currentMovie.title) || currentMovie.bannerUrl || currentMovie.posterUrl}
             alt={currentMovie.title}
+            onError={(e) => {
+              const local = getLocalPoster(currentMovie.title);
+              if (local && !e.target.src.includes(local)) {
+                e.target.src = local;
+              }
+            }}
             className="w-full h-full object-cover object-center opacity-40 blur-xs scale-105 transition-all duration-700"
           />
           {/* Dual Overlay Gradients */}
@@ -119,8 +126,16 @@ const MovieBanner = ({ movies }) => {
               onClick={() => navigate(`/movies/${currentMovie.id}`)}
             >
               <img
-                src={currentMovie.posterUrl}
+                src={getLocalPoster(currentMovie.title) || currentMovie.posterUrl}
                 alt={currentMovie.title}
+                onError={(e) => {
+                  const local = getLocalPoster(currentMovie.title);
+                  if (local && !e.target.src.includes(local)) {
+                    e.target.src = local;
+                  } else {
+                    e.target.src = createFallbackPoster(currentMovie.title);
+                  }
+                }}
                 className="w-56 lg:w-64 aspect-[2/3] object-cover rounded-2xl shadow-2xl border-2 border-white/20 transform group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
