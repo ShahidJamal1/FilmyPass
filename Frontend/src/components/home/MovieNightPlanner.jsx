@@ -1,50 +1,110 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Compass, Users, Clock, Film, ArrowRight, CheckCircle2, Ticket } from 'lucide-react';
-import { createFallbackPoster, getLocalPoster } from '../../api/tmdbApi';
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Sparkles,
+  Compass,
+  Users,
+  Clock,
+  Film,
+  ArrowRight,
+  CheckCircle2,
+  Ticket,
+} from "lucide-react";
+import { createFallbackPoster, getLocalPoster } from "../../api/tmdbApi";
 
 const MOODS = [
-  { id: 'action', label: 'Action & Thrills', emoji: '💥', genres: ['Action', 'Thriller', 'Adventure'] },
-  { id: 'comedy', label: 'Comedy & Chill', emoji: '😂', genres: ['Comedy', 'Romance'] },
-  { id: 'scifi', label: 'Sci-Fi & Epic', emoji: '🚀', genres: ['Sci-Fi', 'Fantasy', 'Mythology'] },
-  { id: 'horror', label: 'Spooky & Mystery', emoji: '👻', genres: ['Horror', 'Mystery'] },
-  { id: 'family', label: 'Family & Heartwarming', emoji: '🍿', genres: ['Animation', 'Drama', 'Family'] }
+  {
+    id: "action",
+    label: "Action & Thrills",
+    emoji: "💥",
+    genres: ["Action", "Thriller", "Adventure"],
+  },
+  {
+    id: "comedy",
+    label: "Comedy & Chill",
+    emoji: "😂",
+    genres: ["Comedy", "Romance"],
+  },
+  {
+    id: "scifi",
+    label: "Sci-Fi & Epic",
+    emoji: "🚀",
+    genres: ["Sci-Fi", "Fantasy", "Mythology"],
+  },
+  {
+    id: "horror",
+    label: "Spooky & Mystery",
+    emoji: "👻",
+    genres: ["Horror", "Mystery"],
+  },
+  {
+    id: "family",
+    label: "Family & Heartwarming",
+    emoji: "🍿",
+    genres: ["Animation", "Drama", "Family"],
+  },
 ];
 
 const COMPANIONS = [
-  { id: 'solo', label: 'Solo Movie Lover', icon: '👤', tip: 'Best seat: Center Aisle' },
-  { id: 'couple', label: 'Date Night', icon: '💑', tip: 'Best seat: Recliner Corner' },
-  { id: 'friends', label: 'With Friends Gang', icon: '👯', tip: 'Book 3+ seats together' },
-  { id: 'family', label: 'Family Outing', icon: '👨‍👩‍👧', tip: 'Prime Executive row' }
+  {
+    id: "solo",
+    label: "Solo Movie Lover",
+    icon: "👤",
+    tip: "Best seat: Center Aisle",
+  },
+  {
+    id: "couple",
+    label: "Date Night",
+    icon: "💑",
+    tip: "Best seat: Recliner Corner",
+  },
+  {
+    id: "friends",
+    label: "With Friends Gang",
+    icon: "👯",
+    tip: "Book 3+ seats together",
+  },
+  {
+    id: "family",
+    label: "Family Outing",
+    icon: "👨‍👩‍👧",
+    tip: "Prime Executive row",
+  },
 ];
 
 const TIME_SLOTS = [
-  { id: 'matinee', label: 'Matinee (12 PM - 4 PM)', period: 'Afternoon' },
-  { id: 'prime', label: 'Prime Time (4 PM - 8 PM)', period: 'Evening' },
-  { id: 'night', label: 'Late Night (8 PM onwards)', period: 'Night' }
+  { id: "matinee", label: "Matinee (12 PM - 4 PM)", period: "Afternoon" },
+  { id: "prime", label: "Prime Time (4 PM - 8 PM)", period: "Evening" },
+  { id: "night", label: "Late Night (8 PM onwards)", period: "Night" },
 ];
 
 const MovieNightPlanner = ({ movies = [] }) => {
   const navigate = useNavigate();
-  const [selectedMood, setSelectedMood] = useState('action');
-  const [selectedCompanion, setSelectedCompanion] = useState('friends');
-  const [selectedTime, setSelectedTime] = useState('prime');
+  const [selectedMood, setSelectedMood] = useState("action");
+  const [selectedCompanion, setSelectedCompanion] = useState("friends");
+  const [selectedTime, setSelectedTime] = useState("prime");
 
   // Compute matched movies
   const matchedMovies = useMemo(() => {
     if (!movies || movies.length === 0) return [];
 
-    const activeMood = MOODS.find(m => m.id === selectedMood);
+    const activeMood = MOODS.find((m) => m.id === selectedMood);
     const targetGenres = activeMood ? activeMood.genres : [];
 
     // Score movies based on genre match and rating
-    const scored = movies.map(m => {
+    const scored = movies.map((m) => {
       let score = 0;
-      const movieGenres = (m.genre || []).map(g => g.toLowerCase());
-      
-      targetGenres.forEach(g => {
-        if (movieGenres.some(mg => mg.includes(g.toLowerCase()))) {
+      const movieGenres = (
+        Array.isArray(m.genre)
+          ? m.genre
+          : typeof m.genre === "string"
+            ? [m.genre]
+            : []
+      ).map((g) => String(g).toLowerCase());
+
+      targetGenres.forEach((g) => {
+        if (movieGenres.some((mg) => mg.includes(g.toLowerCase()))) {
           score += 3;
         }
       });
@@ -76,7 +136,8 @@ const MovieNightPlanner = ({ movies = [] }) => {
             Can't Decide What to Watch?
           </h2>
           <p className="text-slate-300 text-xs sm:text-sm font-medium mt-1">
-            Pick your mood, companions, and timing — we'll tailor the ultimate cinema plan in seconds.
+            Pick your mood, companions, and timing — we'll tailor the ultimate
+            cinema plan in seconds.
           </p>
         </div>
 
@@ -88,21 +149,20 @@ const MovieNightPlanner = ({ movies = [] }) => {
 
       {/* Planner Controls Grid */}
       <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-white/10">
-        
         {/* Step 1: Mood */}
         <div className="space-y-3">
           <label className="text-xs font-extrabold uppercase tracking-wider text-rose-300 flex items-center gap-1.5">
             <span>1. What's the Vibe?</span>
           </label>
           <div className="flex flex-wrap gap-2">
-            {MOODS.map(mood => (
+            {MOODS.map((mood) => (
               <button
                 key={mood.id}
                 onClick={() => setSelectedMood(mood.id)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                   selectedMood === mood.id
-                    ? 'bg-rose-600 text-white shadow-md scale-102 border border-rose-400'
-                    : 'bg-white/10 text-slate-300 hover:bg-white/20 border border-white/5'
+                    ? "bg-rose-600 text-white shadow-md scale-102 border border-rose-400"
+                    : "bg-white/10 text-slate-300 hover:bg-white/20 border border-white/5"
                 }`}
               >
                 <span>{mood.emoji}</span>
@@ -118,14 +178,14 @@ const MovieNightPlanner = ({ movies = [] }) => {
             <span>2. Who's Coming Along?</span>
           </label>
           <div className="flex flex-wrap gap-2">
-            {COMPANIONS.map(comp => (
+            {COMPANIONS.map((comp) => (
               <button
                 key={comp.id}
                 onClick={() => setSelectedCompanion(comp.id)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                   selectedCompanion === comp.id
-                    ? 'bg-rose-600 text-white shadow-md scale-102 border border-rose-400'
-                    : 'bg-white/10 text-slate-300 hover:bg-white/20 border border-white/5'
+                    ? "bg-rose-600 text-white shadow-md scale-102 border border-rose-400"
+                    : "bg-white/10 text-slate-300 hover:bg-white/20 border border-white/5"
                 }`}
               >
                 <span>{comp.icon}</span>
@@ -141,14 +201,14 @@ const MovieNightPlanner = ({ movies = [] }) => {
             <span>3. Preferred Showtime?</span>
           </label>
           <div className="flex flex-col gap-2">
-            {TIME_SLOTS.map(slot => (
+            {TIME_SLOTS.map((slot) => (
               <button
                 key={slot.id}
                 onClick={() => setSelectedTime(slot.id)}
                 className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                   selectedTime === slot.id
-                    ? 'bg-rose-600 text-white shadow-md border border-rose-400'
-                    : 'bg-white/10 text-slate-300 hover:bg-white/20 border border-white/5'
+                    ? "bg-rose-600 text-white shadow-md border border-rose-400"
+                    : "bg-white/10 text-slate-300 hover:bg-white/20 border border-white/5"
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -160,7 +220,6 @@ const MovieNightPlanner = ({ movies = [] }) => {
             ))}
           </div>
         </div>
-
       </div>
 
       {/* Recommended Matches */}
@@ -173,7 +232,8 @@ const MovieNightPlanner = ({ movies = [] }) => {
             </span>
           </h3>
           <span className="text-xs text-slate-400 hidden sm:inline">
-            Smart seating tip: {COMPANIONS.find(c => c.id === selectedCompanion)?.tip}
+            Smart seating tip:{" "}
+            {COMPANIONS.find((c) => c.id === selectedCompanion)?.tip}
           </span>
         </div>
 
@@ -184,17 +244,28 @@ const MovieNightPlanner = ({ movies = [] }) => {
               className="bg-white/10 hover:bg-white/15 border border-white/15 hover:border-rose-400/50 rounded-2xl p-3.5 flex gap-3 transition-all backdrop-blur-md group"
             >
               <img
-                src={getLocalPoster(movie.title) || movie.posterUrl || createFallbackPoster(movie.title, movie.genre?.[0])}
+                src={
+                  getLocalPoster(movie.title) ||
+                  movie.posterUrl ||
+                  createFallbackPoster(movie.title, movie.genre?.[0])
+                }
                 alt={movie.title}
                 onError={(e) => {
                   const local = getLocalPoster(movie.title);
                   if (local && !e.currentTarget.src.includes(local)) {
                     e.currentTarget.src = local;
-                  } else if (movie.posterUrl && movie.posterUrl.includes('image.tmdb.org') && !e.currentTarget.src.includes('wsrv.nl')) {
+                  } else if (
+                    movie.posterUrl &&
+                    movie.posterUrl.includes("image.tmdb.org") &&
+                    !e.currentTarget.src.includes("wsrv.nl")
+                  ) {
                     e.currentTarget.src = `https://wsrv.nl/?url=${encodeURIComponent(movie.posterUrl)}`;
                   } else {
                     e.currentTarget.onerror = null;
-                    e.currentTarget.src = createFallbackPoster(movie.title, movie.genre?.[0]);
+                    e.currentTarget.src = createFallbackPoster(
+                      movie.title,
+                      movie.genre?.[0],
+                    );
                   }
                 }}
                 className="w-20 h-28 object-cover rounded-xl shadow-md shrink-0 group-hover:scale-102 transition-transform"
@@ -204,13 +275,15 @@ const MovieNightPlanner = ({ movies = [] }) => {
                   <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-400">
                     <span>★ {movie.rating}/10</span>
                     <span className="text-slate-400">•</span>
-                    <span className="text-slate-300 truncate">{movie.duration}</span>
+                    <span className="text-slate-300 truncate">
+                      {movie.duration}
+                    </span>
                   </div>
                   <h4 className="text-sm font-extrabold text-white truncate mt-1">
                     {movie.title}
                   </h4>
                   <p className="text-[11px] text-rose-300 font-medium truncate mt-0.5">
-                    {movie.genre?.join(', ')}
+                    {movie.genre?.join(", ")}
                   </p>
                 </div>
 
@@ -235,7 +308,6 @@ const MovieNightPlanner = ({ movies = [] }) => {
           ))}
         </div>
       </div>
-
     </div>
   );
 };

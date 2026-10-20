@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Ticket, Play, Star, Clock, Globe, Shield } from 'lucide-react';
-import Modal from '../common/Modal';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { Ticket, Play, Star, Clock, Globe, Shield } from "lucide-react";
+import Modal from "../common/Modal";
 
 const MovieBanner = ({ movies }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -16,7 +16,6 @@ const MovieBanner = ({ movies }) => {
   return (
     <>
       <div className="relative w-full min-h-[460px] md:min-h-[520px] rounded-3xl overflow-hidden bg-slate-950 shadow-soft-lg my-6 flex items-center">
-        
         {/* Background Backdrop with Gradient Overlays */}
         <div className="absolute inset-0 z-0">
           <img
@@ -31,7 +30,6 @@ const MovieBanner = ({ movies }) => {
 
         {/* Content Section */}
         <div className="relative z-10 max-w-7xl w-full mx-auto px-6 sm:px-10 py-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-          
           {/* Text Information (Left / Mobile Center) */}
           <motion.div
             key={currentMovie.id}
@@ -48,7 +46,9 @@ const MovieBanner = ({ movies }) => {
               <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-amber-400">
                 <Star className="w-3.5 h-3.5 fill-amber-400" />
                 <span>{currentMovie.rating}/10</span>
-                <span className="text-slate-300 font-normal">({currentMovie.votes})</span>
+                <span className="text-slate-300 font-normal">
+                  ({currentMovie.votes})
+                </span>
               </div>
               <div className="flex items-center gap-1 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-slate-300">
                 <Clock className="w-3.5 h-3.5" />
@@ -65,11 +65,19 @@ const MovieBanner = ({ movies }) => {
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-300">
               <span className="flex items-center gap-1 bg-white/15 px-2.5 py-0.5 rounded-md text-white font-medium text-xs">
                 <Globe className="w-3 h-3" />
-                {currentMovie.languages?.join(', ')}
+                {Array.isArray(currentMovie.languages)
+                  ? currentMovie.languages.join(", ")
+                  : typeof currentMovie.languages === "string"
+                    ? currentMovie.languages
+                    : "Hindi"}
               </span>
               <span className="text-slate-400">•</span>
               <span className="font-medium text-slate-200">
-                {currentMovie.genre?.join(' • ')}
+                {Array.isArray(currentMovie.genre)
+                  ? currentMovie.genre.join(" • ")
+                  : typeof currentMovie.genre === "string"
+                    ? currentMovie.genre
+                    : "Genre unavailable"}
               </span>
             </div>
 
@@ -106,7 +114,10 @@ const MovieBanner = ({ movies }) => {
             transition={{ duration: 0.5 }}
             className="hidden md:block md:col-span-4 justify-self-end"
           >
-            <div className="relative group cursor-pointer" onClick={() => navigate(`/movies/${currentMovie.id}`)}>
+            <div
+              className="relative group cursor-pointer"
+              onClick={() => navigate(`/movies/${currentMovie.id}`)}
+            >
               <img
                 src={currentMovie.posterUrl}
                 alt={currentMovie.title}
@@ -119,7 +130,6 @@ const MovieBanner = ({ movies }) => {
               </div>
             </div>
           </motion.div>
-
         </div>
 
         {/* Hero Carousel Navigation Dots */}
@@ -130,7 +140,9 @@ const MovieBanner = ({ movies }) => {
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
                 className={`h-2 rounded-full transition-all ${
-                  currentIndex === idx ? 'w-8 bg-brand-500' : 'w-2 bg-white/30 hover:bg-white/50'
+                  currentIndex === idx
+                    ? "w-8 bg-brand-500"
+                    : "w-2 bg-white/30 hover:bg-white/50"
                 }`}
               />
             ))}
