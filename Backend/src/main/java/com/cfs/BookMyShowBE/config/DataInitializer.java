@@ -53,18 +53,55 @@ public class DataInitializer implements CommandLineRunner {
             customerRepository.save(new Customer("Aryan Sharma", "aryan@filmypass.com", "9876543210"));
         }
 
-        // 2. Ensure default theatres exist
-        if (theatreRepository.count() == 0) {
-            theatreRepository.save(new Theatre("PVR Icon: Phoenix Palladium", "Mumbai", "Lower Parel, Mumbai"));
-            theatreRepository.save(new Theatre("INOX: Megaplex Inorbit Mall", "Mumbai", "Malad West, Mumbai"));
-            theatreRepository.save(new Theatre("Prasads Multiplex: NTR Marg", "Hyderabad", "NTR Marg, Opposite Lumbini Park, Hyderabad"));
-            theatreRepository.save(new Theatre("AMB Cinemas: Gachibowli", "Hyderabad", "Sarath City Capital Mall, Gachibowli, Hyderabad"));
-            theatreRepository.save(new Theatre("PVR Forum Sujana Mall: Kukatpally", "Hyderabad", "Kukatpally Housing Board Colony, Hyderabad"));
-            theatreRepository.save(new Theatre("PVR Plaza: Connaught Place", "Delhi", "H-Block, Connaught Place, New Delhi"));
-            theatreRepository.save(new Theatre("PVR: Forum Mall Koramangala", "Bengaluru", "Hosur Road, Koramangala, Bengaluru"));
-            theatreRepository.save(new Theatre("PVR: Phoenix Marketcity", "Pune", "Viman Nagar, Pune"));
-            theatreRepository.save(new Theatre("PVR: Grand Mall Velachery", "Chennai", "Velachery, Chennai"));
-            theatreRepository.save(new Theatre("INOX: Quest Mall", "Kolkata", "Park Circus, Kolkata"));
+        // 2. Ensure default authentic theatres exist across all major cities
+        List<Theatre> seedTheatres = List.of(
+                // Mumbai
+                new Theatre("PVR Icon: Phoenix Palladium", "Mumbai", "Lower Parel, Mumbai"),
+                new Theatre("INOX: Megaplex Inorbit Mall", "Mumbai", "Malad West, Mumbai"),
+                // Delhi / Delhi-NCR
+                new Theatre("PVR Plaza: Connaught Place", "Delhi", "H-Block, Connaught Place, New Delhi"),
+                new Theatre("Cinepolis: DLF Avenue Saket", "Delhi", "Press Enclave Marg, Saket, New Delhi"),
+                new Theatre("INOX: Nehru Place", "Delhi", "Eros Corporate Tower, Nehru Place, New Delhi"),
+                // Hyderabad
+                new Theatre("Prasads Multiplex: NTR Marg", "Hyderabad", "NTR Marg, Opposite Lumbini Park, Hyderabad"),
+                new Theatre("AMB Cinemas: Gachibowli", "Hyderabad", "Sarath City Capital Mall, Gachibowli, Hyderabad"),
+                new Theatre("PVR Forum Sujana Mall: Kukatpally", "Hyderabad", "Kukatpally Housing Board Colony, Hyderabad"),
+                // Bengaluru
+                new Theatre("PVR: Forum Mall Koramangala", "Bengaluru", "Hosur Road, Koramangala, Bengaluru"),
+                new Theatre("INOX: Garuda Mall, MG Road", "Bengaluru", "Magrath Road, Ashok Nagar, Bengaluru"),
+                // Chandigarh
+                new Theatre("PVR: Elante Mall", "Chandigarh", "Industrial Area Phase 1, Chandigarh"),
+                new Theatre("Cinepolis: Jagat Mall, Sector 17", "Chandigarh", "Sector 17C, Chandigarh"),
+                // Ahmedabad
+                new Theatre("PVR: Acropolis Mall, Thaltej", "Ahmedabad", "SG Highway, Thaltej, Ahmedabad"),
+                new Theatre("Cinemax: Red Carpet, Bodakdev", "Ahmedabad", "Judges Bungalow Road, Bodakdev, Ahmedabad"),
+                // Pune
+                new Theatre("PVR: Phoenix Marketcity", "Pune", "Viman Nagar, Pune"),
+                new Theatre("INOX: Bund Garden", "Pune", "Central Mall, Bund Garden Road, Pune"),
+                // Chennai
+                new Theatre("PVR: Grand Mall Velachery", "Chennai", "Velachery, Chennai"),
+                new Theatre("Sathyam Cinemas: Royapettah", "Chennai", "Thiru Vi Ka Road, Royapettah, Chennai"),
+                // Kolkata
+                new Theatre("INOX: Quest Mall", "Kolkata", "Park Circus, Kolkata"),
+                new Theatre("PVR: South City Mall", "Kolkata", "Prince Anwar Shah Road, Kolkata"),
+                // Kochi
+                new Theatre("PVR: LuLu International Mall", "Kochi", "Edappally, Kochi"),
+                new Theatre("Cinepolis: Centre Square Mall", "Kochi", "MG Road, Shenoys, Kochi"),
+                // Patna
+                new Theatre("PVR: City Centre Mall, Lodipur", "Patna", "Lodipur, Frazer Road, Patna"),
+                new Theatre("Cinepolis: P&M Mall, Patliputra", "Patna", "Patliputra Industrial Area, Patna"),
+                // Jaipur
+                new Theatre("INOX: Crystal Palm, Bais Godam", "Jaipur", "Sahkar Marg, Bais Godam, Jaipur"),
+                new Theatre("Cinepolis: World Trade Park", "Jaipur", "JLN Marg, Malviya Nagar, Jaipur"),
+                // Lucknow
+                new Theatre("PVR: Phoenix Palassio", "Lucknow", "Amar Shaheed Path, Gomti Nagar Extension, Lucknow"),
+                new Theatre("Wave Cinemas: Gomti Nagar", "Lucknow", "Vibhuti Khand, Gomti Nagar, Lucknow")
+        );
+
+        for (Theatre st : seedTheatres) {
+            if (!theatreRepository.existsByName(st.getName())) {
+                theatreRepository.save(st);
+            }
         }
 
         // 3. Known authentic TMDB movie seeds with valid poster paths and trailers

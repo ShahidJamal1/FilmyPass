@@ -8,7 +8,11 @@ import java.util.Optional;
 
 public interface TheatreRepository extends JpaRepository<Theatre,Long> {
 
+    List<Theatre> findByCityIgnoreCase(String city);
+
     List<Theatre> findByCityIgnoreCaseOrderByName(String city);
 
     Optional<Theatre> findByNameAndCity(String name, String city);
+
+    boolean existsByName(String name);
 }

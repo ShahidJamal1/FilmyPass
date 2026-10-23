@@ -21,10 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -111,9 +108,6 @@ public class CatalogService {
         List<Theatre> theatres = theatreRepository.findAll();
         if (theatres.isEmpty()) return;
 
-        // Generate shows for all registered theatres in all cities
-        List<Theatre> selectedTheatres = theatres;
-
         LocalDate today = LocalDate.now();
         LocalTime[] showTimes = new LocalTime[]{
                 LocalTime.of(10, 30),
@@ -128,8 +122,8 @@ public class CatalogService {
                 BigDecimal.valueOf(350)
         };
 
-        for (Theatre theatre : selectedTheatres) {
-            for (int dayOffset = 0; dayOffset < 4; dayOffset++) {
+        for (Theatre theatre : theatres) {
+            for (int dayOffset = 0; dayOffset < 5; dayOffset++) {
                 LocalDate showDate = today.plusDays(dayOffset);
                 for (int slot = 0; slot < 2; slot++) {
                     int showIdx = (dayOffset * 2 + slot + (movie.getId() != null ? movie.getId().intValue() : 0)) % showTimes.length;
@@ -144,11 +138,36 @@ public class CatalogService {
         }
     }
 
+    public String normalizeCity(String city) {
+        if (city == null || city.isBlank()) return "Mumbai";
+        String c = city.trim().toLowerCase();
+        if (c.contains("delhi")) return "Delhi";
+        if (c.contains("bengaluru") || c.contains("bangalore")) return "Bengaluru";
+        if (c.contains("ahmedabad")) return "Ahmedabad";
+        if (c.contains("chandigarh")) return "Chandigarh";
+        if (c.contains("kochi") || c.contains("cochin")) return "Kochi";
+        if (c.contains("patna")) return "Patna";
+        if (c.contains("jaipur")) return "Jaipur";
+        if (c.contains("lucknow")) return "Lucknow";
+        if (c.contains("pune")) return "Pune";
+        if (c.contains("chennai") || c.contains("madras")) return "Chennai";
+        if (c.contains("kolkata") || c.contains("calcutta")) return "Kolkata";
+        if (c.contains("hyderabad")) return "Hyderabad";
+        if (c.contains("mumbai") || c.contains("bombay")) return "Mumbai";
+        // Capitalize first letter
+        return city.trim().substring(0, 1).toUpperCase() + (city.trim().length() > 1 ? city.trim().substring(1) : "");
+    }
+
     public List<TheatreResponse> theatres(String city) {
         if (city == null || city.isBlank()) {
             return theatreRepository.findAll().stream().map(TheatreResponse::from).toList();
         }
-        return theatreRepository.findByCityIgnoreCaseOrderByName(city).stream().map(TheatreResponse::from).toList();
+        String normCity = normalizeCity(city);
+        List<Theatre> list = theatreRepository.findByCityIgnoreCaseOrderByName(normCity);
+        if (list.isEmpty()) {
+            list = theatreRepository.findByCityIgnoreCaseOrderByName(city);
+        }
+        return list.stream().map(TheatreResponse::from).toList();
     }
 
     public TheatreResponse theatre(Long id) {
@@ -157,18 +176,78 @@ public class CatalogService {
                 .orElseThrow(() -> new ResourceNotFoundException("Theatre not found with ID: " + id));
     }
 
+    @Transactional
     public List<ShowResponse> shows(String city, LocalDate date, Long movieId) {
         if (date == null) {
             date = LocalDate.now();
         }
         LocalDate today = LocalDate.now();
-        // Strictly allow booking only for the next 4 days: Today, Today+1, Today+2, Today+3
-        if (date.isBefore(today) || date.isAfter(today.plusDays(3))) {
+        // Allow booking for today up to next 7 days
+        if (date.isBefore(today) || date.isAfter(today.plusDays(7))) {
             return List.of();
         }
+
+        String normCity = normalizeCity(city);
         LocalDateTime from = date.atStartOfDay();
-        return showRepository.findActiveShows(city, from, from.plusDays(1), movieId).stream()
+        LocalDateTime to = from.plusDays(1);
+
+        List<Show> activeShows = showRepository.findActiveShows(normCity, from, to, movieId);
+
+        // If no shows exist in this city for this date, dynamically ensure theatres and shows exist!
+        if (activeShows.isEmpty()) {
+            ensureShowsForCityAndDate(normCity, date, movieId);
+            activeShows = showRepository.findActiveShows(normCity, from, to, movieId);
+        }
+
+        return activeShows.stream()
                 .map(show -> ShowResponse.from(show, showSeatRepository.findAvailableLabels(show.getId()))).toList();
+    }
+
+    @Transactional
+    public void ensureShowsForCityAndDate(String city, LocalDate date, Long movieId) {
+        List<Theatre> theatres = theatreRepository.findByCityIgnoreCase(city);
+        if (theatres.isEmpty()) {
+            String cleanCity = city.substring(0, 1).toUpperCase() + (city.length() > 1 ? city.substring(1) : "");
+            theatres = List.of(
+                    theatreRepository.save(new Theatre("PVR Icon: " + cleanCity + " Central Mall", cleanCity, "Station Road, " + cleanCity)),
+                    theatreRepository.save(new Theatre("Cinepolis: Grand Galleria, " + cleanCity, cleanCity, "Civil Lines, " + cleanCity))
+            );
+        }
+
+        List<Movie> movies;
+        if (movieId != null) {
+            Optional<Movie> mOpt = movieRepository.findById(movieId);
+            if (mOpt.isEmpty()) mOpt = movieRepository.findByTmdbId(movieId);
+            movies = mOpt.map(List::of).orElseGet(() -> movieRepository.findByActiveTrueOrderByTitle().stream().limit(5).toList());
+        } else {
+            movies = movieRepository.findByActiveTrueOrderByTitle().stream().limit(10).toList();
+        }
+
+        LocalTime[] showTimes = new LocalTime[]{
+                LocalTime.of(10, 30),
+                LocalTime.of(14, 15),
+                LocalTime.of(18, 0),
+                LocalTime.of(21, 15)
+        };
+        BigDecimal[] prices = new BigDecimal[]{
+                BigDecimal.valueOf(250),
+                BigDecimal.valueOf(320),
+                BigDecimal.valueOf(280),
+                BigDecimal.valueOf(350)
+        };
+
+        for (Theatre theatre : theatres) {
+            for (Movie movie : movies) {
+                for (int slot = 0; slot < 2; slot++) {
+                    int showIdx = (slot + (movie.getId() != null ? movie.getId().intValue() : 0)) % showTimes.length;
+                    LocalDateTime startsAt = LocalDateTime.of(date, showTimes[showIdx]);
+                    if (!showRepository.existsByMovieIdAndTheatreIdAndStartsAt(movie.getId(), theatre.getId(), startsAt)) {
+                        LocalDateTime endsAt = startsAt.plusMinutes(movie.getDurationMinutes() != null ? movie.getDurationMinutes() : 150);
+                        showRepository.save(new Show(movie, theatre, startsAt, endsAt, prices[showIdx], 96));
+                    }
+                }
+            }
+        }
     }
 
     public ShowResponse show(Long id) {

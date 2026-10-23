@@ -7,10 +7,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('filmypass_user');
-      if (saved) {
+      const isExplicitLogin = localStorage.getItem('filmypass_explicit_login');
+      // Only restore user if user actually logged in explicitly (not legacy auto-login)
+      if (saved && isExplicitLogin === 'true') {
         const parsed = JSON.parse(saved);
-        if (parsed) {
-          // Ensure id is a valid positive number
+        if (parsed && parsed.email) {
           if (!parsed.id || isNaN(Number(parsed.id))) {
             parsed.id = 1;
           } else {
@@ -18,15 +19,13 @@ export const AuthProvider = ({ children }) => {
           }
           return parsed;
         }
+      } else {
+        // Clean up legacy auto-saved default
+        localStorage.removeItem('filmypass_user');
       }
     } catch (e) {}
-    return {
-      id: 1,
-      name: 'Aryan Sharma',
-      email: 'aryan@filmypass.com',
-      phone: '9876543210',
-      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop'
-    };
+    // Default: guest user (not logged in)
+    return null;
   });
 
   const [isLoggedIn, setIsLoggedIn] = useState(!!user);
@@ -34,9 +33,11 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       localStorage.setItem('filmypass_user', JSON.stringify(user));
+      localStorage.setItem('filmypass_explicit_login', 'true');
       setIsLoggedIn(true);
     } else {
       localStorage.removeItem('filmypass_user');
+      localStorage.removeItem('filmypass_explicit_login');
       setIsLoggedIn(false);
     }
   }, [user]);
@@ -44,6 +45,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (identifier, password) => {
     try {
       const profileData = await profileApi.loginProfile(identifier);
+      localStorage.setItem('filmypass_explicit_login', 'true');
       setUser(profileData);
       return { success: true, user: profileData };
     } catch (err) {
@@ -54,6 +56,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, phone, password) => {
     try {
       const profileData = await profileApi.registerProfile({ name, email, phone, password });
+      localStorage.setItem('filmypass_explicit_login', 'true');
       setUser(profileData);
       return { success: true, user: profileData };
     } catch (err) {
@@ -62,11 +65,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    localStorage.removeItem('filmypass_user');
+    localStorage.removeItem('filmypass_explicit_login');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, isLoggedIn, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

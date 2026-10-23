@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
 import { bookingApi } from '../api/bookingApi';
+import { profileApi } from '../api/profileApi';
 import { MOCK_OFFERS } from '../api/mockData';
 import { getLocalPoster, createFallbackPoster } from '../api/tmdbApi';
-import { ShieldCheck, Ticket, Tag, CreditCard, Smartphone, Building2, Wallet, ArrowRight, Check } from 'lucide-react';
+import { ShieldCheck, Ticket, Tag, CreditCard, Smartphone, Building2, Wallet, ArrowRight, Check, User, Mail, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CheckoutPage = () => {
@@ -29,6 +30,9 @@ const CheckoutPage = () => {
   const [promoCodeInput, setPromoCodeInput] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('upi');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [guestName, setGuestName] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
 
   const subtotal = calculateSubtotal();
   const convenienceFee = calculateConvenienceFee();
@@ -72,9 +76,35 @@ const CheckoutPage = () => {
 
     setIsProcessing(true);
 
-    const profileId = (user && !isNaN(Number(user.id)) && Number(user.id) > 0)
+    let profileId = (user && !isNaN(Number(user.id)) && Number(user.id) > 0)
       ? Number(user.id)
-      : 1;
+      : null;
+    let customerEmail = user?.email || guestEmail.trim();
+
+    if (!user) {
+      if (!guestEmail.trim()) {
+        toast.error('Please enter your email to receive ticket details');
+        setIsProcessing(false);
+        return;
+      }
+      try {
+        const registered = await profileApi.registerProfile({
+          name: guestName.trim() || 'Movie Fan',
+          email: guestEmail.trim(),
+          phone: guestPhone.trim() || '9876543210'
+        });
+        if (registered && registered.id) {
+          profileId = Number(registered.id);
+          customerEmail = registered.email || guestEmail.trim();
+        }
+      } catch (e) {
+        console.warn('Guest profile register notice:', e);
+      }
+    }
+
+    if (!profileId) {
+      profileId = 1;
+    }
 
     const seatLabels = selectedSeats.map(s => s.code);
     const resolvedPoster =
@@ -97,7 +127,7 @@ const CheckoutPage = () => {
       convenienceFee,
       discount,
       totalPrice: total,
-      userEmail: user?.email || 'aryan@filmypass.com'
+      userEmail: customerEmail || 'guest@filmypass.com'
     };
 
     try {
@@ -162,6 +192,76 @@ const CheckoutPage = () => {
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Contact Details Card (BookMyShow style) */}
+          <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-soft space-y-4">
+            {user ? (
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="text-xs font-extrabold uppercase tracking-wider text-emerald-600 flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Booking As</span>
+                  </div>
+                  <div className="text-base font-extrabold text-slate-900">{user.name}</div>
+                  <div className="text-xs text-slate-500 font-medium">{user.email} • {user.phone}</div>
+                </div>
+                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl">
+                  Logged In
+                </span>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                    <User className="w-4 h-4 text-brand-600" />
+                    <span>Contact Information (For M-Ticket)</span>
+                  </h3>
+                  <Link
+                    to="/login"
+                    state={{ from: '/checkout' }}
+                    className="text-xs font-bold text-brand-600 hover:underline"
+                  >
+                    Have an account? Sign In
+                  </Link>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Your digital ticket & QR pass will be issued to these details.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                  <div className="relative">
+                    <User className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="Your Name"
+                      className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-brand-500"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      placeholder="Email Address *"
+                      className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-brand-500"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="tel"
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      placeholder="Mobile (10 digits)"
+                      className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-brand-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Price Breakdown */}

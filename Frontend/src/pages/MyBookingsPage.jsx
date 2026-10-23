@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { bookingApi } from '../api/bookingApi';
 import { getLocalPoster, createFallbackPoster } from '../api/tmdbApi';
 import { useAuth } from '../context/AuthContext';
@@ -56,6 +57,29 @@ const MyBookingsPage = () => {
     const status = b.status || (b.rawStatus === 'CANCELLED' ? 'Cancelled' : 'Upcoming');
     return status === activeTab;
   });
+
+  if (!user) {
+    return (
+      <div className="text-center py-20 px-4 space-y-6 max-w-md mx-auto">
+        <div className="w-20 h-20 bg-rose-50 text-brand-600 rounded-3xl flex items-center justify-center mx-auto shadow-sm border border-rose-100">
+          <Ticket className="w-10 h-10" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">View Your Movie Tickets</h2>
+          <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+            Please sign in with your email or mobile number to view your confirmed bookings, download digital M-Tickets, or cancel reservations.
+          </p>
+        </div>
+        <Link
+          to="/login"
+          state={{ from: '/my-bookings' }}
+          className="inline-flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-brand-600 to-rose-500 hover:from-brand-700 hover:to-rose-600 text-white font-extrabold text-sm rounded-2xl shadow-glow transition-all"
+        >
+          <span>Sign In / Register</span>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 py-6 pb-16">

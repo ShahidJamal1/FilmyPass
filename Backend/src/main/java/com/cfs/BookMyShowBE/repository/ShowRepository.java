@@ -15,7 +15,8 @@ public interface ShowRepository extends JpaRepository<Show, Long> {
     boolean existsByMovieIdAndStartsAtGreaterThanEqual(Long movieId, LocalDateTime startsAt);
 
     @Query("select s from Show s join fetch s.movie m join fetch s.theatre t "+
-            "where s.active = true and m.active = true and lower(t.city) = lower(:city) "+
+            "where s.active = true and m.active = true "+
+            "and (lower(t.city) = lower(:city) or lower(:city) like lower(concat('%', t.city, '%')) or lower(t.city) like lower(concat('%', :city, '%'))) "+
             "and (:movieId is null or m.id = :movieId or m.tmdbId = :movieId) "+
             "and s.startsAt >= :from and s.startsAt < :to order by s.startsAt")
     List<Show> findActiveShows(@Param("city") String city,

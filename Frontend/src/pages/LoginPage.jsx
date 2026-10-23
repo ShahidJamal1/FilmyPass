@@ -1,33 +1,42 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Film, Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Film, Mail, Lock, ArrowRight, Sparkles, UserCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const LoginPage = () => {
-  const [identifier, setIdentifier] = useState('aryan@filmypass.com');
-  const [password, setPassword] = useState('password123');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const redirectTarget = location.state?.from || '/profile';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!identifier || !password) {
-      toast.error('Please enter email/username and password');
+    if (!identifier.trim()) {
+      toast.error('Please enter your email or phone number');
       return;
     }
 
     setLoading(true);
-    const result = await login(identifier, password);
+    const result = await login(identifier, password || 'password123');
     setLoading(false);
 
     if (result.success) {
       toast.success(`Welcome back, ${result.user.name}!`);
-      navigate('/profile');
+      navigate(redirectTarget);
     } else {
       toast.error(result.message);
     }
+  };
+
+  const handleFillDemo = () => {
+    setIdentifier('aryan@filmypass.com');
+    setPassword('password123');
+    toast.success('Demo account credentials filled!');
   };
 
   return (
@@ -84,14 +93,14 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Email or Username</label>
+              <label className="text-xs font-bold text-slate-700">Email or Mobile Number</label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="name@example.com"
+                  placeholder="name@example.com or 9876543210"
                   className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brand-500"
                 />
               </div>
@@ -129,6 +138,18 @@ const LoginPage = () => {
               )}
             </button>
           </form>
+
+          {/* Quick Demo Login Option */}
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={handleFillDemo}
+              className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-colors border border-slate-200/60"
+            >
+              <UserCheck className="w-3.5 h-3.5 text-brand-600" />
+              <span>Fill Demo Account (Aryan Sharma)</span>
+            </button>
+          </div>
 
           <div className="text-center text-xs text-slate-500 font-medium">
             Don't have an account?{' '}

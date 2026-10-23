@@ -68,8 +68,9 @@ const ShowsPage = () => {
               name: theatre.name,
               location: theatre.address || theatre.city || "",
               city: theatre.city,
-              distance: null,
-              amenities: [],
+              distance: theatre.distance || null,
+              amenities: theatre.amenities && theatre.amenities.length > 0 ? theatre.amenities : ['Dolby Atmos', '4K Laser', 'M-Ticket'],
+              cancellationPolicy: theatre.cancellationPolicy || 'Cancellation available up to 2 hrs before showtime',
               shows: [],
             });
           }
